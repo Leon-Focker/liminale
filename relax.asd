@@ -9,6 +9,7 @@
   :pathname "src/"
   :components ((:file "package")
 	       (:file "helpers")
+	       (:file "notes")
 	       (:file "relax")))
 
 ;; EOF relax.asd

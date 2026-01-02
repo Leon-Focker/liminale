@@ -1,0 +1,708 @@
+;;; -*- syntax: common-lisp; package: clm; base: 10; mode: lisp -*-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; File:             moog.ins
+;;;
+;;; Purpose:          Instrument to place a moog low-pass filter emulation and
+;;;                   SVF high-pass over a soundfile.  There are also routines
+;;;                   that use this to create effective automated cross fade
+;;;                   effects of arbitrary lengths and numbers of sound files.
+;;;                   These use highpass/lowpass filters and custom exponential
+;;;                   envelopes (as opposed to just straight fades).
+;;;
+;;; Author:           Michael Edwards - m@michael-edwards.org
+;;;
+;;; $$ Last modified: 12:05:48 Tue Jul  5 2011 BST
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(in-package :clm)
+
+;; this sometimes causes error on compilation; if so, just try again
+;(load (compile-file "/lisp/clm-4/moog.lisp"))
+;(load (compile-file "/lisp/clm-4/svf.lisp"))
+
+(definstrument moog
+    (file time
+          &key
+          (duration nil)
+          (amp-env '(0 1 100 1))
+          (amp-env-expt 2)
+          ;; separate to the amp-env we can have a fade in or out at the
+          ;; beginning/end: milliseconds
+          (fadein nil)
+          (fadeout nil)
+          (fade-window hann-window) ; or any type given in clm.html
+          (amp 1.0)
+          (srt 1.0)
+          (start 0.0)
+          (printing t)
+          (input-amp-scaler 1.0)
+          (moog t)
+          ;; whether the moog filter should hard limit to 0.95
+          (saturate nil)
+          (hipass nil) ;;  or t
+          ;; the high pass cutoff will be below that of the moog freq
+          ;; (determined by envelope below); set the multiplier of the moog
+          ;; freq that we'll use for the high pass
+          (hipass-freqm .75)
+          (hipass-resonance .5)
+          (hipass-overdrive 0)
+          ;; used by both moog and svf high-pass
+          (freq-env '(0 -1 1 1)) ;; cut-off
+          (freq-env-expt 2)
+          (res-env '(0 0 1 0))) ;; Q
+  (let* ((st (floor (* time *srate*)))
+         (start-sample (floor (* *srate* start)))
+         (stereo-input (= 2 (sound-chans file)))
+         (fA (open-input* file :start start-sample))
+         (fB (when stereo-input 
+               (open-input* file :channel 1 :start start-sample)))
+         (dur (if duration
+                  duration
+                  (/ (- (sound-duration file) start) srt)))
+         (fenv (make-env :envelope freq-env :duration dur :base freq-env-expt))
+         (qenv (make-env :envelope res-env :duration dur))
+         (svfA (when hipass (make-svf-filter :overdrive hipass-overdrive 
+                                             :resonance hipass-resonance)))
+         (svfB (when hipass (make-svf-filter :overdrive hipass-overdrive 
+                                             :resonance hipass-resonance)))
+         (mfA (when moog (make-moog-filter :frequency 0 :Q 0.9)))
+         (mfB (when (and moog stereo-input) (make-moog-filter :frequency 0 
+                                                              :Q 0.9)))
+         (ampf (make-env :envelope amp-env :scaler amp :duration dur
+                         :base amp-env-expt)) 
+         (finsamps 0)
+         (foutsamps 0)
+         (fin (when fadein 
+                (setf finsamps (msecs2frames fadein))
+                ;; this makes fade in and out. fadein and fadeout could be
+                ;; different lengths though so in both cases we'll have to
+                ;; ignore the second half
+                (make-fft-window fade-window (* 2 finsamps))))
+         (fout (when fadeout
+                 (setf foutsamps (msecs2frames fadeout))
+                 (make-fft-window fade-window (* 2 foutsamps))))
+         (fini 0)
+         ;; so we start in the ramp down portion
+         (fouti foutsamps)
+         (do-src (/= srt 1.0))
+         (inputA (if do-src
+                     (make-src :input fA :srate srt)
+                     (make-readin :file fA)))
+         (inputB (when stereo-input 
+                   (if do-src
+                       (make-src :input fB :srate srt)
+                       (make-readin :file fB :channel 1))))
+         (count 0)
+         (amp-val 0.0)
+         (qval 0.0)
+         (outa-val 0.0)
+         (outb-val 0.0)
+         (rampval 0.0)
+         (fval 0.0)
+         (hpfval 0.0)
+         (nd (+ st (floor (* *srate* dur))))
+         (foutbeg (1+ (- nd foutsamps))))
+    (run
+     (loop for i from st to nd do
+          (when printing (setf count (if (= count *srate*) 1 (+ count 1)))
+                (when (= count *srate*)
+                  (clm-print t "~&~asecs" (round (/ i *srate*)))))
+          (setf qval (env qenv)
+                fval (env fenv)
+                amp-val (env ampf)
+                outa-val (* input-amp-scaler
+                            (if do-src
+                                (src inputA)
+                                (readin inputA))))
+          (when moog
+            (setf (moog-Q mfA) qval
+                  (moog-Q mfB) qval
+                  (moog-frequency mfA) fval
+                  (moog-frequency mfB) fval
+                  outa-val (moog-filter mfA outa-val saturate)))
+          (when stereo-input
+            (setf outb-val (* input-amp-scaler (if do-src
+                                                   (src inputB)
+                                                   (readin inputB))))
+            (when moog
+              (setf outb-val (moog-filter mfB outb-val saturate))))
+          (when hipass
+            (setf hpfval (* hipass-freqm fval))
+            (set-svf-cutoff svfA hpfval)
+            (set-svf-cutoff svfB hpfval)
+            (setf outa-val (svf-highpass svfA outa-val))
+            (when stereo-input
+              (setf outb-val (svf-highpass svfB outb-val))))
+        ;; do the fade in/out
+          (if (and fadein (< fini finsamps))
+              (progn
+                (setf rampval (aref fin fini)
+                      outa-val (* outa-val rampval)
+                      outb-val (* outb-val rampval))
+                (incf fini))
+              (when (and fadeout (>= i foutbeg))
+                (setf rampval (aref fout fouti)
+                      outa-val (* outa-val rampval)
+                      outb-val (* outb-val rampval))
+                (incf fouti)))
+          (outa i (* amp-val outa-val))
+          (outb i (* amp-val 
+                     (if stereo-input 
+                         outb-val
+                         outa-val)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; just puts a quick fade in/out on a soundfile (mono or stereo)
+(definstrument quick-fade 
+    (file time 
+          ;; fade-in/out are in millisecs
+          &key (amp 1.0) fade-in fade-out (start 0) duration (expt 1) print)
+  (let* ((st (floor (* time *srate*)))
+         (start-sample (floor (* *srate* start)))
+         (stereo-input (= 2 (sound-chans file)))
+         (snd-dur (sound-duration file))
+         (fade-durs (* 0.001 (cond ((and fade-in fade-out) (+ fade-in fade-out))
+                                  (fade-in fade-in)
+                                  (fade-out fade-out)
+                                  (t 0))))
+         (dur (if duration duration (- snd-dur start))))
+    (when (>= dur fade-durs)
+      ;; we go to the trouble of building up an amp-env so we can take
+      ;; advantage of the exponent (for sagging/bowing curves) rather than
+      ;; using a standard window as in the quick-fade in moog 
+      (let* ((amp-env 
+              (remove nil
+                      (list 0 (if fade-in 0 1) 
+                            (when fade-in
+                              (* fade-in .001))
+                            (when fade-in
+                              1)
+                            (when fade-out
+                              (let ((x (- dur (* fade-out .001))))
+                                (unless (> x 0)
+                                  (error "quick-fade: dur: ~a, fade-out: ~a"
+                                         dur fade-out))
+                                x))
+                            (when fade-out
+                              1)
+                            dur (if fade-out 0 1))))
+             (ampf (make-env :envelope amp-env :duration dur :scaler amp 
+                             :base expt))
+             (fA (open-input* file :start start-sample))
+             (fB (when stereo-input 
+                   (open-input* file :channel 1 :start start-sample)))
+             (inA (make-readin :file fA))
+             (inB (when stereo-input (make-readin :file fB :channel 1)))
+             (amp 0.0)
+             (nd (+ st (floor (* *srate* dur)))))
+        (when print
+          (format t "~&quick-fade: st: ~a, nd: ~a, amp-env: ~a" st nd amp-env))
+        (run
+         (loop for i from st to nd do
+              (setf amp (env ampf))
+              (outa i (* amp (readin inA)))
+              (when stereo-input
+                (outb i (* amp (readin inB))))))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; cross fade routines
+
+; (load "/Users/medward2/lisp/funs/env.lsp")
+; (load (compile-file "/Users/medward2/ins/track-rms.ins"))
+;; also requires l-for-lookup.lsp from the slippery-chicken package
+
+(defparameter +moog-cross-fader-base-env+
+  '(0 0 10 .2 20 0.15 30 .3 36 .25 50 .5 60 .45 100 1))
+
+;;; this cross fades two files only, with or without moog and high-pass
+;;; filters.  We use the envelope above for both amplitude and filter envelopes
+;;; but with an envelope exponent dependent on the duration (so the longer the
+;;; duration the more convex the envelope--see exponent-for-duration function
+;;; below).   If you don't specify the start time it will be calculated so
+;;; according to the durations; see moog-cross-fade-aux function below.
+(defun moog-cross-fade (file1 file2 output &key start (quick-fade-dur 30) ;; ms
+                        (filters t) scaled-to (amp1 1.0) (amp2 1.0) saturate
+                        (min-overlap 0))
+  (let* ((srate (sound-srate file1)))
+    (unless (= srate (sound-srate file2))
+      (error "files must have the same sampling-rate"))
+    (with-sound (:output output :srate srate :channels 2 :play nil
+                         :scaled-to scaled-to :data-format mus-lfloat)
+      (moog-cross-fade-aux file1 file2 :start start :amp1 amp1 :amp2 amp2 
+                           :filters filters :saturate saturate 
+                           :quick-fade-dur quick-fade-dur))))
+
+
+;;; this one will cross fade a list of sound files, repeating each one as
+;;; necessary so as to create the required output duration (or thereabouts).
+(defun multi-moog-cross-fade (files output duration &key (quick-fade-dur 30)
+                              scaled-to (filters t) 
+                              ;; allow the moog filter to saturate? (best not)
+                              saturate
+                              ;; run and mix the same process twice but with
+                              ;; the files in a different order?
+                              run-twice
+                              ;; either t or if num that's the max amp scaler
+                              ;; derived from rms
+                              (use-rms nil))
+  ;; in case we have pathnames instead of strings
+  (setf files (loop for f in files collect (namestring f)))
+  (if run-twice
+      (let ((start2 (/ (sound-duration (first files)) 2)))
+        (when (< start2 duration) ;; surely not, but....
+          (setf start2 (* 0.1 duration)))
+        (multi-moog-cross-fade-aux
+         files "/tmp/mmcfaux1.wav" duration :quick-fade-dur quick-fade-dur
+         :scaled-to nil :filters filters :saturate saturate 
+         :use-rms use-rms)
+        (multi-moog-cross-fade-aux
+         (let ((wrap (floor (length files) 2)))
+           (append (nthcdr wrap files) (subseq files 0 wrap)))
+         "/tmp/mmcfaux2.wav" (- duration start2)
+         :quick-fade-dur quick-fade-dur
+         :scaled-to nil :filters filters :saturate saturate 
+         :use-rms use-rms)
+        (with-sound (:output output :srate (sound-srate "/tmp/mmcfaux1.wav")
+                             :channels 2 :play nil
+                             :scaled-to scaled-to)
+          (mix "/tmp/mmcfaux1.wav")
+          (quick-fade 
+           "/tmp/mmcfaux2.wav" start2 
+           :fade-in (* 1000 (max 10 (* .1 (sound-duration 
+                                           "/tmp/mmcfaux2.wav")))))))
+      (multi-moog-cross-fade-aux
+       files output duration :quick-fade-dur quick-fade-dur :scaled-to
+       scaled-to :filters filters :saturate saturate :use-rms use-rms)))
+
+(defun moog-fade-out (infile outfile &key duration (time 0) quick (filters t)
+                      (amp-scaler 1.0) saturate)
+  (with-sound (:statistics t :srate (sound-srate infile) 
+                           :data-format mus-lfloat :output outfile 
+                           :channels (sound-chans infile))
+    (moog-fade-out-aux infile :amp-scaler amp-scaler :duration duration 
+                       :filters filters
+                       :saturate saturate :time time :quick quick)))
+
+(defun moog-fade-in (infile outfile &key duration (time 0) quick saturate
+                     (filters t) (amp-scaler 1.0))
+  (with-sound (:statistics t :srate (sound-srate infile) :output outfile
+                           :data-format mus-lfloat 
+                           :channels (sound-chans infile))
+    (moog-fade-in-aux infile :amp-scaler amp-scaler :duration duration 
+                      :filters filters
+                      :saturate saturate :time time :quick quick)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; auxiliary functions for the above
+
+(defun multi-moog-cross-fade-aux (files output duration &key (quick-fade-dur 30)
+                                  scaled-to (filters t) saturate
+                                  ;; either t or if a number, that's the max amp
+                                  ;; scaler we'll use no matter what the RMS
+                                  (use-rms nil)) 
+  (let* ((durs (loop for f in files collect (sound-duration f)))
+         (rmss (when use-rms (loop for f in files 
+                                for rms = (track-rms f :print nil)
+                                do (when (zerop rms)
+                                     (error "~a has RMS of 0!" f))
+                                collect rms)))
+         (rms-av (when use-rms (average rmss))) 
+         (num-fades 0))
+    (flet ((tmpfile (num)
+             (format nil "/tmp/mumcftmp~a.wav" (mod num 2))))
+      (multiple-value-bind
+            (indices start-times actual-duration)
+          (mmcf-timings durs duration)
+        (format t "~%~a~%~a~%~f" indices start-times actual-duration)
+        (setf num-fades (length indices))
+        (loop for i from 2
+           for first = (= i 2)
+           for last = (= i num-fades)
+           for index1 in indices 
+           for index2 in (cdr indices) 
+           for start2 in (cdr start-times)
+           for file2 = (nth index2 files)
+           ;; we only change gain on file2 because that's the unfaded sound
+           ;; file, whereas (unless this is the first in the loop) file1 is the
+           ;; temp file we've just written 
+           for amp1 = (if (and first use-rms)
+                          (/ rms-av (nth index1 rmss)) 
+                          1.0)
+           for amp2 = (if use-rms (/ rms-av (nth index2 rmss)) 1.0)
+           for file1 = (if first (nth index1 files) (tmpfile (1- i)))
+           for outfile = (if last output (tmpfile i))
+           do
+           (when (numberp use-rms)
+             (when (> amp1 use-rms) (setf amp1 use-rms))
+             (when (> amp2 use-rms) (setf amp2 use-rms)))
+           (format t "~&Writing ~a ~%(~a (amp ~a) ~%xfade ~a (amp ~a)) ~
+                       ~%start2: ~a" outfile file1 amp1 file2 amp2 start2)
+           (moog-cross-fade file1 file2 outfile 
+                            :scaled-to (when last scaled-to)
+                            :filters filters
+                            :saturate saturate
+                            :amp1 amp1
+                            :amp2 amp2
+                            :start start2
+                            :quick-fade-dur quick-fade-dur))))))
+
+;;; here we get the start times of the files, repeating files where necessary.
+;;; we first loop through starting each sound file such that 10% of its
+;;; duration will be played after the previous file has finished.  We then see
+;;; what total duration that would have given us, compare to the requested
+;;; output duration and, if the duration is > requested, scale down that 10%
+;;; accordingly.  If it's < requested, we play each soundfile twice, three
+;;; times etc. and repeat the process until we've got the requested output
+;;; duration. 
+(defun mmcf-timings (durations output-duration &optional (proportion 0.1))
+  (let* ((indices (loop for i below (length durations) collect i)))
+    (loop with ind = (copy-list indices) 
+       for i from 2
+       do
+       (multiple-value-bind
+             (start-times duration)
+           (mmcf-timings-aux durations ind proportion)
+         ;; (format t "~%~a~%~f" start-times duration)
+         (cond ((= duration output-duration) ;; pretty slim chance
+                (return (values ind start-times duration)))
+               ((> duration output-duration)
+                (return
+                  (multiple-value-bind
+                        (start-timesf durationf)
+                      ;; do it again but scaling down to get required duration
+                      ;; we'll still go a little over but it's close enough
+                      ;; todo: why doesn't this result in the output duration
+                      ;; being exactly what we specify?
+                      (mmcf-timings-aux durations ind 
+                                        (* proportion 
+                                           (/ output-duration duration)))
+                    (values ind start-timesf durationf))))
+               (t (setf ind (mmcf-timings-aux2 indices i))))))))
+
+;;; each sound, with given durations, will have (default) 10% of its duration
+;;; alone after the previous sound is finished.  calculate the start times and
+;;; the total duration.
+(defun mmcf-timings-aux (durations indices &optional (proportion 0.1))
+  (unless (and (> proportion 0.0)
+               (<= proportion 1.0))
+    (error "mmcf-timings-aux: proportion should be > 0 and <= 1: ~f"
+           proportion))
+  (loop 
+     with propinv = (- 1.0 proportion)
+     with start1 = 0.0
+     for i in indices 
+     for j in (cdr indices)
+     for dur1 = (nth i durations)
+     for dur2 = (nth j durations)
+     for dur2propinv = (* dur2 propinv)
+     for start2 = (max 0.0 (+ start1 (- dur1 dur2propinv)))
+     collect start2 into start-times
+     do
+     (setf start1 start2)
+     finally (return (values (cons 0.0 start-times) (+ start2 dur2)))))
+
+;;; using indices into the files (e.g. '(0 1 2 3)), double/triple etc. them up
+;;; to repeat and thus create longer output duration
+;;; NB could use a shuffling algorithm to avoid straight repeats....
+(defun mmcf-timings-aux2 (indices multiple)
+  (let ((len-results (* multiple (length indices))))
+    ;; if we're to generate enough results it's worth doing the fibonnaci
+    ;; routine, otherwise just repeat each index
+    (if (> len-results 35)
+        (sc::fibonacci-transitions len-results indices)
+        (loop for i in indices appending
+             (make-list multiple :initial-element i)))))
+
+;;; fade out file1 and in file2
+;;; assumes both sndfiles are stereo
+;;; try this with the same pink noise file as file1 and file2; it's not perfect
+;;; by any means but it's useable and more interesting than a simple amplitude
+;;; fade 
+;;; if <start> then we start fading in file2 at this point (secs) otherwise we
+;;; aim for a complete fade by the end of whichever file is longest
+(defun moog-cross-fade-aux (file1 file2 &key start (quick-fade-dur 30) ;; ms
+                            saturate (filters t) (amp1 1.0) (amp2 1.0)
+                            (min-overlap 0))
+  (unless (> quick-fade-dur 0)
+    (error "moog-cross-fade-aux: quick-fade-dur must be > 0"))
+  (let* ((dur1 (sound-duration file1))
+         (dur2 (sound-duration file2))
+         (ret 0)
+         (dur-diff (abs (- dur1 dur2)))
+         (qfd (* quick-fade-dur .001)))
+    (unless (and (> dur1 min-overlap)
+                 (> dur2 min-overlap))
+      (error "moog-cross-fade-aux: files must be at least ~a secs long"
+             min-overlap))
+    (format t "~&dur1: ~a dur2: ~a" dur1 dur2)
+    (cond (start ;;
+           (let ((overlap (- dur1 start)))
+             (when (< overlap min-overlap)
+               (warn "moog-cross-fade-aux:adjusting overlap (~a, dur1 ~a st~a)"
+                     overlap dur1 start)
+               (setf ret (- min-overlap overlap))
+               (decf start ret))
+             (when (> overlap dur2)
+               (setf overlap dur2))
+             (when (> start 0)
+               (quick-fade file1 0 :fade-out quick-fade-dur :print nil
+                           :amp amp1 :duration (+ qfd start)))
+             (moog-fade-out-aux file1 :short-fadein quick-fade-dur
+                                :filters filters
+                                :saturate saturate :amp-scaler amp1 :time start
+                                :quick t :start start)
+             (moog-fade-in-aux file2 :time start :short-fadeout quick-fade-dur
+                               :filters filters
+                               :saturate saturate :amp-scaler amp2 :quick nil 
+                               :duration (+ qfd overlap))
+             (when (< overlap dur2)
+               (quick-fade file2 dur1 :fade-in quick-fade-dur :print nil
+                           :amp amp2 :start overlap)))) ;;(+ start overlap)))))
+          ((zerop dur-diff)
+           (moog-fade-out-aux file1 :saturate saturate :filters filters
+                              :quick t :amp-scaler amp1)
+           (moog-fade-in-aux file2 :filters filters :quick nil :amp-scaler amp2
+                             :saturate saturate))
+          ((> dur1 dur2)
+           ;; we'll play the first part of file1 unprocessed then splice in
+           ;; the fade out as the quick fade is halfway down
+           (quick-fade file1 0 :fade-out quick-fade-dur :print nil
+                       :amp amp1 :duration (+ dur-diff qfd))
+           (moog-fade-out-aux file1 :short-fadein quick-fade-dur 
+                              :filters filters
+                              :time dur-diff :quick t :amp-scaler amp1 
+                              :start dur-diff
+                              :saturate saturate)
+           (moog-fade-in-aux file2 :time dur-diff :quick nil :amp-scaler amp2
+                             :saturate saturate :filters filters))
+          ((> dur2 dur1) ;; can only be true now but...
+           (moog-fade-out-aux file1 :quick t :amp-scaler amp1 :filters filters 
+                              :saturate saturate)
+           (moog-fade-in-aux file2 :duration (+ dur1 qfd) :quick nil 
+                             :filters filters
+                             :saturate saturate :amp-scaler amp2
+                             :short-fadeout quick-fade-dur)
+           (quick-fade file2 dur1 :fade-in quick-fade-dur :amp amp2
+                       :start dur1)))
+    ret))
+
+;;; just the moog lowpass moving from 20->15000Hz
+(defun moog-fade-in-aux (infile &key duration (time 0) (start 0) 
+                         ;; default is a concave fade, but if quick=t, convex
+                         quick (amp-scaler 1.0) (filters t) saturate
+                         ;; see moog ins: these are additional to main fade
+                         short-fadein short-fadeout)
+  (unless duration
+    (setf duration (- (sound-duration infile) start)))
+  (let* ((env-expt (exponent-for-duration duration))
+         (env-expt-inv (/ env-expt))
+         (exp-env (env-expt +moog-cross-fader-base-env+ 1)))
+    (moog infile
+          time
+          :saturate saturate
+          :start start
+          :duration duration
+          :amp (if filters .5 1)
+          :input-amp-scaler amp-scaler
+          :amp-env exp-env
+          :amp-env-expt (if quick env-expt-inv env-expt) 
+          :freq-env-expt (expt (if quick env-expt env-expt-inv) 4)
+          :fadein short-fadein
+          :fadeout short-fadeout
+          :moog filters
+          ;; Qs any lower can result in bass distortion, it seems
+          ;; todo: is this still the case now we've got rid of saturation?
+          :res-env '(0 0.7 100 .9)
+          :freq-env (scale-env exp-env 15000 20))))
+
+;;; hi-pass but no moog low-pass 
+(defun moog-fade-out-aux (infile &key duration (time 0) (start 0) 
+                          quick (amp-scaler 1.0) (filters t) saturate
+                          ;; see moog ins: these are additional to main fade
+                          short-fadein short-fadeout)
+  (unless duration
+    (setf duration (- (sound-duration infile) start)))
+  (let* ((env-expt (exponent-for-duration duration))
+         (env-expt-inv (/ env-expt)))
+    (moog infile
+          time
+          :saturate saturate
+          :start start
+          :duration duration
+          :amp (if filters .5 1) ;;(* .5 amp-scaler) 
+          :input-amp-scaler amp-scaler
+          :amp-env '(0 1 100 0)
+          :amp-env-expt (if quick env-expt-inv env-expt) 
+          :freq-env-expt (expt (if quick env-expt env-expt-inv) 5)
+          :fadein short-fadein
+          :fadeout short-fadeout
+          :moog nil
+          :hipass filters
+          :hipass-resonance 0
+          :hipass-overdrive 0
+          ;; so there is no moog lowpass but we gradually go from full spectrum
+          ;; > 20Hz to only > 15KHz 
+          :freq-env '(0 20 100 15000))))
+
+(defun exponent-for-duration (duration)
+  (log duration 2))
+
+(defmacro secs2frames (secs)
+  `(floor (* ,secs *srate*)))
+
+(defmacro msecs2frames (ms)
+  `(floor (* 0.001 ,ms *srate*)))
+
+;;; simple interface to handle mix with seconds instead of sample frames
+(defmacro mix-secs (file output-start &key (input-start 0) duration)
+  `(mix ,file 
+        :input-frame (secs2frames ,input-start)
+        :output-frame (secs2frames ,output-start)
+        :frames (when ,duration
+                  (secs2frames ,duration))))
+
+(defun average (nums)
+  (/ (loop for n in nums sum n) (length nums)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+#|
+
+
+(multi-moog-cross-fade
+ (directory "/projects/mpc/snd/platter-b4*.wav")
+ "/Users/medward2/Desktop/multi-cross-fade.wav"
+ 180 :use-rms 3 :scaled-to .8 :saturate nil :filters t :run-twice t)
+
+
+(with-sound (:statistics t :scaled-to .5 :srate 48000 :channels 2)
+  (quick-fade "/snd/pink-20rms.wav" 0 :fade-in 50 :print t))
+
+(with-sound (:statistics t :scaled-to .5 :srate 48000 :channels 2)
+  (moog "/projects/mpc/snd/platter-b4-fall-princey-window.wav" 0
+        :freq-env '(0 2000 100 2000)
+        :res-env '(0 0.0 100 0.0)))
+
+(moog-cross-fade
+ "/snd/pink-20rms.wav"
+ "/snd/pink-20rms.wav"
+ "/Users/medward2/Desktop/cross-fade.wav")
+
+(moog-cross-fade
+ ;; "/projects/mpc/snd/platter-b4-5th-storage.wav"
+ ;; "/projects/mpc/snd/platter-b4-doubler-window.wav"
+ ;; "/projects/mpc/snd/platter-b4-fall-princey-window.wav"
+ "platter-b4-fall-princey-window.wav"
+ ;; "/projects/mpc/snd/platter-b4-fall-thunder.wav"
+ "platter-b4-fall-thunder.wav"
+ "/Users/medward2/Desktop/cross-fade.wav"
+ :start 14 :amp1 .4545 :amp2 3)
+
+(moog-cross-fade
+ "/snd/pink-20rms.wav"
+ "/snd/pink-20rms.wav"
+ "/Users/medward2/Desktop/cross-fade1a.wav"
+ :start 1)
+
+(moog-cross-fade
+ "/projects/mpc/Audio/plattenglocke-b4-gestrichen-processed.wav" 
+ "/projects/mpc/Audio/flutter-ped3.wav"
+ "/Users/medward2/Desktop/cross-fade2.wav")
+
+(moog-cross-fade
+ "/projects/mpc/Audio/flutter-ped3.wav"
+ "/projects/mpc/Audio/plattenglocke-b4-gestrichen-processed.wav" 
+ "/Users/medward2/Desktop/cross-fade3.wav")
+
+(moog-cross-fade
+ "/projects/mpc/Audio/plattenglocke-ef3-gestrichen.wav" 
+ "/projects/mpc/Audio/plattenglocke-b4-gestrichen-processed.wav" 
+ "/Users/medward2/Desktop/cross-fade4.wav")
+
+(moog-cross-fade
+ "/projects/mpc/snd/cymbal-chinese-fireworlds-barns.wav"
+ "/projects/mpc/snd/cymbal-chinese-princey-barns.wav"
+ "/Users/medward2/Desktop/cross-fade5.wav")
+
+(moog-cross-fade
+ "/projects/mpc/snd/platter-b4-doubler-window.wav"
+ "/projects/mpc/snd/platter-b4-dday-tomb.wav"
+ "/Users/medward2/Desktop/cross-fade6.wav")
+
+(moog-fade-in 
+ ;; "/projects/mpc/Audio/plattenglocke-b4-gestrichen-processed.wav" 
+ ;; "/projects/mpc/Audio/flutter-ped3.wav"
+ "/snd/pink-20rms.wav"
+ "/Users/medward2/Desktop/fade-in.wav"
+ :quick t)
+
+(moog-fade-out
+ "/snd/pink-20rms.wav"
+ "/Users/medward2/Desktop/fade-out.wav" 
+ :quick t)
+
+;; fade in
+(with-sound(:statistics t :scaled-to .5 :srate 48000 :channels 2)
+  (moog "/projects/mpc/Audio/plattenglocke-b4-gestrichen-processed.wav"
+        0 
+        :duration 3
+        :amp-env '(0 .1 99 1 100 0)
+        :res-env '(0 .6 80 0 100 0) 
+        :freq-env-expt 30
+        :freq-env '(0 50 100 15000)
+        ))
+
+;; fade out
+(with-sound (:statistics t :scaled-to .5 :srate 48000 :channels 2)
+  (moog  "/snd/pink-20rms.wav"
+         ;;"/projects/mpc/Audio/plattenglocke-ef3-gestrichen-processed.wav"
+        0 
+        :fadein 1000
+        :fadeout 1000
+        :duration 3
+        :amp-env '(0 1 99 1 100 0)
+        :moog nil
+        :hipass t
+        :hipass-resonance 0
+        :hipass-overdrive 0
+        :freq-env-expt 30
+        ;; :res-env '(0 .6 80 0 100 0) 
+        :freq-env '(0 500 100 500)
+        ))
+
+(with-sound (:srate 48000)
+  (mix "/projects/mpc/snd/edelweiss-bandtune-window.wav"
+       :input-frame (* *srate* 1) :frames (* *srate* 2)
+       :output-frame (* *srate* 3)))
+
+(with-sound (:srate 48000)
+  (mix-secs "/projects/mpc/snd/edelweiss-bandtune-window.wav"
+            3 :input-start 1 :duration 3))
+
+(let ((mf (make-moog-filter :frequency 500 :Q 0.9)))
+  (loop repeat 1000 collect (moog-filter mf (random 1.0) nil)))
+  
+
+(mmcf-timings-aux '(40 42 41 33) '(0 1 2 3))
+(mmcf-timings '(40 42 41 33) 180)
+(mmcf-timings 
+ (print (loop for f in 
+ '("cymbal-60cm-chinese-superball-scrape.wav"
+        "cymbal-chinese-5th-thunder.wav"   ;; quiet mellow deep
+        "cymbal-chinese-hiphop-tomb.wav"   ;; quiet mellow, wah cresc. roll
+        "platter-b4-distance-storage.wav"  ;; chugging distant tones
+        "cymbal-chinese-princey-barns.wav" ;; deep mellow roll
+        ;; "cymbal-trowa-digisub-barns.wav"  ;; deep bass stuttering roll, hmmm
+        "cymbal-chinese-fireworlds-barns.wav" ;; chugging, high ringing
+        )
+      collect (sound-duration f)))
+ 210)
+
+|#
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; EOF moog.ins

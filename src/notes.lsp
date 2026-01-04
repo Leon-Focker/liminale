@@ -23,7 +23,8 @@
   ;; use the 'time-left slot to see how harmony developes.
   ;; depending on how many notes are playing, add some
   (case (length note-list)
-    (0 (list (make-note :start time :duration 2000)))
+    (0 (list (make-note :start time :duration 2000
+			:freq (nth (random 3) '(440 880 660)))))
     (1 )
     (2 )
     (3 )))

@@ -10,6 +10,7 @@
     (soundpile-from-folder 'accordion "/E/relax/acc_samples/" :analyse t)))
 
 (defparameter *relax-grid-mseconds* 100)
+(defparameter *min-no-repetitions* 5)
 
 ;; ** Generating Soundfiles
 

@@ -87,7 +87,8 @@
       (loop for random-nr = (random-nldd 0.8 (random-relax))
 	    for mult = (round (scale-to-log random-nr min-mult max-mult))
 	    for new-dur = (* mult *relax-grid-mseconds*)
-	    while (remove-if-not #'(lambda (x) (similar-durp x new-dur)) last)
+	    while (remove-if-not #'(lambda (x) (similar-durp x new-dur))
+				 (subseq last 0 *min-no-repetitions*))
 	    finally (return new-dur)))))
 
 ;; *** get-new-frequency

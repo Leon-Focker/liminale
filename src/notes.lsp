@@ -88,14 +88,60 @@
 	    for mult = (round (scale-to-log random-nr min-mult max-mult))
 	    for new-dur = (* mult *relax-grid-mseconds*)
 	    while (remove-if-not #'(lambda (x) (similar-durp x new-dur))
-				 (subseq last 0 *min-no-repetitions*))
-	    finally (return new-dur)))))
+				 (if (> (length last) *min-no-repetitions*)
+				     (subseq last 0 *min-no-repetitions*)
+				     last))
+	    finally (progn (push new-dur last)
+			   (return new-dur))))))
 
 ;; *** get-new-frequency
 ;;;
-(let ((last '()))
-  (defun get-new-frequency ()
-    ))
+(let ((last-freqs '())
+      (min-freq 40)
+      (max-freq 800)
+      (ratios
+	(append '(1/2 2/3 3/4 4/5 5/6 6/7 7/8)
+		'(2 3/2 4/3 5/4 6/5 7/6 8/7)
+		'(3 2 5/3 3/2 7/5 4/3 9/7)
+		'(1/3 1/2 3/5 2/3 5/7 3/4 7/9)
+		'(4 5))))
+  ;; for each playing freq: calculate possible harmonic intervals
+  ;; compare lists from each freq, use those present on all lists. 
+  (defun get-new-frequency (&rest freqs)
+    (let ((options '())
+	  (similar-options '())
+	  result)
+      ;; calculate freqs from ratios for each input-freq
+      (loop for freq in freqs
+	    do (push (loop for ratio in ratios
+			   for new-freq = (* freq ratio)
+			   when (<= min-freq new-freq max-freq)
+			     collect new-freq)
+		     options))
+      ;; filter options
+      (setf similar-options
+	    (loop for freq in (car options)
+		  when (every #'(lambda (ls) (member freq ls :test #'similar-freqp))
+			      options)
+		    collect freq))
+      ;; in case similar-options is null
+      (setf options (or similar-options options))
+      ;;(setf options (remove-duplicates options :test #'=))
+      ;; try and pick the most original frequency
+      (setf similar-options
+	    (loop for freq in options
+		  unless (member freq
+				 (if (> (length last-freqs) *min-no-repetitions*)
+				     (subseq last-freqs 0 *min-no-repetitions*)
+				     last-freqs)
+				 :test #'similar-freqp)
+		    collect freq))
+      ;; again, in case similar-options is null
+      (setf options (or similar-options options))
+      ;; pick one at random
+      (setf result (nth (floor (* (random-relax) (length options))) options))
+      (push result last-freqs)
+      result)))
 
 ;; *** generate-relaxing-notes
 ;;; Generate the note material for some relaxing music, focused on long, slow,

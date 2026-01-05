@@ -18,7 +18,7 @@
 (wsound "sine-test" 1 (clm::simple-sine 0 1 214 0.5))
 
 (wsound "moog-test" 2
-  (loop for note in (generate-relaxing-notes 10 2)
+  (loop for note in (generate-relaxing-notes 10)
 	for start = (/ (note-start note) 1000.0)
 	for duration = (* (/ (note-duration note) 1000.0) 1.5)
 	for freq = (/ (note-freq note) 8)

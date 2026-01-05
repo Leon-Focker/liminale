@@ -18,6 +18,13 @@
     (setf seed new-seed)
     (reset-random-relax)))
 
+;; ** scale-to-log
+;;; Scale number x on a logarithmic scale from min to max.
+(defun scale-to-log (x min max)
+  (let ((log-min (log min))
+        (log-max (log max)))
+    (exp (+ log-min (* x (- log-max log-min))))))
+
 ;; ** CLM
 
 (defmacro wsound (name out-channels &body body)

@@ -35,10 +35,12 @@
 		 new-notes)))
       ;; check whether other note is long or not
       (1 )
+      ;; check whether other notes are long or not
       (2 )
+      ;; check whether other notes are long or not
       (3 ))
     ;; add new-notes to last-played and return them
-    (loop for note in new-notes do (push note last-played))
+    ;; (loop for note in new-notes do (push note last-played))
     new-notes))
 
 ;; *** similar-freqp
@@ -49,20 +51,50 @@
 	 (min (min freq1 freq2)))
     (<= diff (* min (/ percent 100)))))
 
+;; *** similar-durp
+;;; check whether two durations are similar; two durations are considered
+;;; similar when one is no more than 10% greater than the other.
+(defun similar-durp (dur1 dur2 &optional (percent 10))
+  (let* ((diff (abs (- dur1 dur2)))
+	 (min (min dur1 dur2)))
+    (<= diff (* min (/ percent 100)))))
+
 ;; *** get-long-duration
 ;;; get a duration somewhere between 5 and 30 seconds
-(let ((last '()))
-  (defun get-long-duration ()))
+(let ((last '())
+      (min-duration 5000)
+      (max-duration 30000))
+  (defun get-long-duration ()
+    ))
 
-;; *** get-short-duration
+;; *** get-durations
+(let ((last '())
+      (min-duration-short 500)
+      (max-duration-short 10000)
+      (min-duration-long 5000)
+      (max-duration-long 30000))
+
+;;; get a duration somewhere between 5 and 30 seconds
+  (defun get-long-duration ()
+    (get-duration-aux min-duration-long max-duration-long))
 ;;; get a duration somewhere between 0.5 and 10 seconds
-(let ((last '()))
-  (defun get-short-duration ()))
+  (defun get-short-duration ()
+    (get-duration-aux min-duration-short max-duration-short))
+  
+  (defun get-duration-aux (min-dur max-dur)
+    (let ((min-mult (ceiling min-dur *relax-grid-mseconds*))
+	  (max-mult (floor max-dur *relax-grid-mseconds*)))
+      (loop for random-nr = (random-nldd 0.8 (random-relax))
+	    for mult = (round (scale-to-log random-nr min-mult max-mult))
+	    for new-dur = (* mult *relax-grid-mseconds*)
+	    while (remove-if-not #'(lambda (x) (similar-durp x new-dur)) last)
+	    finally (return new-dur)))))
 
 ;; *** get-new-frequency
 ;;;
 (let ((last '()))
-  (defun get-new-frequency ()))
+  (defun get-new-frequency ()
+    ))
 
 ;; *** generate-relaxing-notes
 ;;; Generate the note material for some relaxing music, focused on long, slow,

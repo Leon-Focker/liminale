@@ -103,7 +103,7 @@
 ;;;
 (let ((last-freqs '())
       (min-freq 40)
-      (max-freq 800)
+      (max-freq 600)
       (ratios
 	(append '(1/2 2/3 3/4); 4/5 5/6 6/7 7/8)
 		'(2 3/2 4/3 5/4); 6/5 7/6 8/7)
@@ -149,8 +149,9 @@
 		    collect freq))
       ;; again, in case similar-options is null
       (setf options (or similar-options options))
-      ;; pick one at random
-      (setf result (nth (floor (* (random-relax) (length options))) options))
+      ;; pick one
+      ;; (setf result (nth (floor (* (random-relax) (length options))) options))
+      (setf result (first (sort options #'<)))
       (push result last-freqs)
       (round result))))
 

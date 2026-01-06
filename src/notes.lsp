@@ -4,7 +4,7 @@
 
 (defstruct (note
             (:constructor make-note
-                (&key start duration freq velocity
+                (&key start duration freq velocity type
                  &aux (time-left duration))))
   (start 0 :type integer)		; in miliseconds
   (duration 0 :type integer)		; in miliseconds
@@ -22,6 +22,7 @@
 ;;; start to play? Return additional notes as a list.
 ;;;
 (defun add-harmony (note-list &optional (time 0))
+  ;;(format t "~&time: ~a, ~&notelist: ~a" time note-list)
   (let* ((new-notes '()))
     ;; use the 'time-left slot to see how harmony developes.
     ;; depending on how many notes are playing, add some
@@ -29,14 +30,23 @@
       ;; when no note is playing, check last played long note and generate a
       ;; long note that goes a few steps up or down.
       ;; decide whether to add another note with recursive call.
-      (0 (let* ()
-	   (push (make-note :start time :duration 2000
-			    :freq (nth (random 3) '(440 880 660)))
-		 new-notes)))
+      (0 (push (make-note :start time
+			  :duration (get-long-duration) :type 'long
+			  :freq (get-new-frequency))
+	       new-notes)
+       (setf new-notes (append new-notes (add-harmony new-notes time))))
       ;; check whether other note is long or not
-      (1 )
+      (1 (push (make-note :start time
+			  :duration (get-short-duration) :type 'short
+			  :freq (apply #'get-new-frequency (mapcar #'note-freq note-list)))
+	       new-notes)
+       (setf new-notes
+	     (append new-notes (add-harmony (append note-list new-notes) time))))
       ;; check whether other notes are long or not
-      (2 )
+      (2 (push (make-note :start time
+			  :duration (get-short-duration) :type 'short
+			  :freq (apply #'get-new-frequency (mapcar #'note-freq note-list)))
+	       new-notes))
       ;; check whether other notes are long or not
       (3 ))
     ;; add new-notes to last-played and return them
@@ -59,20 +69,15 @@
 	 (min (min dur1 dur2)))
     (<= diff (* min (/ percent 100)))))
 
-;; *** get-long-duration
-;;; get a duration somewhere between 5 and 30 seconds
-(let ((last '())
-      (min-duration 5000)
-      (max-duration 30000))
-  (defun get-long-duration ()
-    ))
-
 ;; *** get-durations
 (let ((last '())
       (min-duration-short 500)
       (max-duration-short 10000)
       (min-duration-long 5000)
       (max-duration-long 30000))
+
+  (defun reset-last-durations ()
+    (setf last '()))
 
 ;;; get a duration somewhere between 5 and 30 seconds
   (defun get-long-duration ()
@@ -100,14 +105,20 @@
       (min-freq 40)
       (max-freq 800)
       (ratios
-	(append '(1/2 2/3 3/4 4/5 5/6 6/7 7/8)
-		'(2 3/2 4/3 5/4 6/5 7/6 8/7)
-		'(3 2 5/3 3/2 7/5 4/3 9/7)
-		'(1/3 1/2 3/5 2/3 5/7 3/4 7/9)
+	(append '(1/2 2/3 3/4); 4/5 5/6 6/7 7/8)
+		'(2 3/2 4/3 5/4); 6/5 7/6 8/7)
+		'(3 2 5/3 3/2); 7/5 4/3 9/7)
+		'(1/3 1/2 3/5 2/3); 5/7 3/4 7/9)
 		'(4 5))))
+
+  (defun reset-last-freqs ()
+    (setf last-freqs '()))
+
   ;; for each playing freq: calculate possible harmonic intervals
   ;; compare lists from each freq, use those present on all lists. 
   (defun get-new-frequency (&rest freqs)
+    (when (null freqs)
+      (push (if (null last-freqs) 528 (car last-freqs)) freqs))
     (let ((options '())
 	  (similar-options '())
 	  result)
@@ -141,7 +152,7 @@
       ;; pick one at random
       (setf result (nth (floor (* (random-relax) (length options))) options))
       (push result last-freqs)
-      result)))
+      (round result))))
 
 ;; *** generate-relaxing-notes
 ;;; Generate the note material for some relaxing music, focused on long, slow,

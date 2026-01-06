@@ -2,6 +2,13 @@
 
 (in-package :relax)
 
+;; ** reset
+
+(defun reset-relax ()
+  (reset-random-relax)
+  (reset-last-durations)
+  (reset-last-freqs))
+
 ;; ** randomness
 
 (let* ((seed 5)

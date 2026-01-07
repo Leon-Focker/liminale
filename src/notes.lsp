@@ -69,6 +69,14 @@
 	 (min (min dur1 dur2)))
     (<= diff (* min (/ percent 100)))))
 
+;; *** find-sounds-with-sufficient-dur
+;;; Find sounds in a soundpile that are long enough to be played at freq for dur
+(defun find-sounds-with-sufficient-dur (dur freq soundpile)
+  (loop for sound in (data soundpile)
+	for sound-dur = (duration sound)
+	for required-dur = (* (/ freq (car (fundamental-frequency sound))) dur)
+	when (>= sound-dur required-dur) collect sound))
+
 ;; *** get-durations
 (let ((last '())
       (min-duration-short 500)

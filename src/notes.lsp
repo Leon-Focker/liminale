@@ -122,6 +122,25 @@
   (defun reset-last-freqs ()
     (setf last-freqs '()))
 
+  (defun filter-similar-options (options)
+    (let ((result '()))
+      (loop for freq in (car options)
+	    when (every #'(lambda (ls) (member freq ls :test #'similar-freqp))
+			options)
+	      do (push freq result))
+      (or result (filter-similar-options (cdr options)))))
+
+  (defun pick-original-freqs (options last-n)
+    (let ((result '()))
+      (loop for freq in options
+	    unless (member freq
+			   (if (> (length last-freqs) last-n)
+			       (subseq last-freqs 0 last-n)
+			       last-freqs)
+			   :test #'similar-freqp)
+	      do (push freq result))
+      (or result (pick-original-freqs options (1- last-n)))))
+
   ;; for each playing freq: calculate possible harmonic intervals
   ;; compare lists from each freq, use those present on all lists. 
   (defun get-new-frequency (&rest freqs)
@@ -138,28 +157,13 @@
 			     collect new-freq)
 		     options))
       ;; filter options
-      (setf similar-options
-	    (loop for freq in (car options)
-		  when (every #'(lambda (ls) (member freq ls :test #'similar-freqp))
-			      options)
-		    collect freq))
-      ;; in case similar-options is null
-      (setf options (or similar-options options))
-      ;;(setf options (remove-duplicates options :test #'=))
+      (setf similar-options (filter-similar-options options))
       ;; try and pick the most original frequency
       (setf similar-options
-	    (loop for freq in options
-		  unless (member freq
-				 (if (> (length last-freqs) *min-no-repetitions*)
-				     (subseq last-freqs 0 *min-no-repetitions*)
-				     last-freqs)
-				 :test #'similar-freqp)
-		    collect freq))
-      ;; again, in case similar-options is null
-      (setf options (or similar-options options))
+	    (pick-original-freqs similar-options *min-no-repetitions*))
       ;; pick one
       ;; (setf result (nth (floor (* (random-relax) (length options))) options))
-      (setf result (first (sort options #'<)))
+      (setf result (first (sort similar-options #'<)))
       (push result last-freqs)
       (round result))))
 

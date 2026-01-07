@@ -37,18 +37,22 @@
        (setf new-notes (append new-notes (add-harmony new-notes time))))
       ;; check whether other note is long or not
       (1 (push (make-note :start time
-			  :duration (get-short-duration) :type 'short
+			  :duration (get-long-duration) :type 'long
 			  :freq (apply #'get-new-frequency (mapcar #'note-freq note-list)))
 	       new-notes)
        (setf new-notes
 	     (append new-notes (add-harmony (append note-list new-notes) time))))
       ;; check whether other notes are long or not
       (2 (push (make-note :start time
-			  :duration (get-short-duration) :type 'short
+			  :duration (get-long-duration) :type 'long
 			  :freq (apply #'get-new-frequency (mapcar #'note-freq note-list)))
 	       new-notes))
       ;; check whether other notes are long or not
-      (3 ))
+      (3 (if (> (random-relax) 0.8)
+	     (push (make-note :start time
+			      :duration (get-long-duration) :type 'long
+			      :freq (apply #'get-new-frequency (mapcar #'note-freq note-list)))
+		   new-notes))))
     ;; add new-notes to last-played and return them
     ;; (loop for note in new-notes do (push note last-played))
     new-notes))

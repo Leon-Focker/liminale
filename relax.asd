@@ -10,6 +10,7 @@
   :components ((:file "package")
 	       (:file "helpers")
 	       (:file "notes")
+	       (:file "synths")
 	       (:file "relax")))
 
 ;; EOF relax.asd

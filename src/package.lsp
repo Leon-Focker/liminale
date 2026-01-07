@@ -21,5 +21,6 @@
 (load (compile-file (clm-path "moog.lisp")))
 (load (compile-file (clm-path "svf.lisp")))
 (load (compile-file (relax-path "src/moog.ins")))
+(load (compile-file (relax-path "src/sine.ins")))
 
 ;; EOF package.lsp

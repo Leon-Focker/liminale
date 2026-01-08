@@ -49,7 +49,7 @@
 		    (pad
 		     (setf (note-freq note) (/ (note-freq note) 2))
 		     (dreamy-pad note i))
-		    (short
+		    (contemplative
 		     (pluck note i))
 		    (t )))))
 

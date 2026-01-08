@@ -29,7 +29,7 @@
 	  (make-note :start time
 		     :duration (get-long-duration)
 		     :type 'pad
-		     :freq (get-new-frequency)))
+		     :freq (get-new-frequency 'pad)))
        (cons new-note (add-pad-harmony (list new-note) time)))
       ((1 2) (setf
 	      new-note
@@ -37,6 +37,7 @@
 			 :duration (get-long-duration)
 			 :type 'pad
 			 :freq (apply #'get-new-frequency
+				      'pad
 				      (mapcar #'note-freq note-list))))
        (cons new-note (add-pad-harmony (cons new-note note-list) time)))
       (3 (when (> (random-relax) 0.8)
@@ -45,7 +46,21 @@
 		       :duration (get-long-duration)
 		       :type 'pad
 		       :freq (apply #'get-new-frequency
+				    'pad
 				    (mapcar #'note-freq note-list)))))))))
+
+;; *** add-contemplative
+;;; Given a list of currently playing pad notes, add some contemplative notes.
+(defun add-contemplative (note-list &optional (time 0))
+  (let ((contemplative-notes (remove-if-not #'is-contemplative note-list)))
+    (when (null contemplative-notes)
+      (list
+       (make-note :start time
+		  :duration (get-short-duration)
+		  :type 'contemplative
+		  :freq (apply #'get-new-frequency
+			       'contemplative
+			       (mapcar #'note-freq note-list)))))))
 
 ;; *** similar-freqp
 ;;; check whether two frequencies are similar; two frequencies are considered
@@ -67,6 +82,10 @@
 (defun is-pad (note)
   (equal 'pad (note-type note)))
 
+;; *** is-contemplative
+(defun is-contemplative (note)
+  (equal 'contemplative (note-type note)))
+
 ;; *** find-sounds-with-sufficient-dur
 ;;; Find sounds in a soundpile that are long enough to be played at freq for dur
 (defun find-sounds-with-sufficient-dur (dur freq soundpile)
@@ -78,7 +97,7 @@
 ;; *** get-durations
 (let ((last '())
       (min-duration-short 500)
-      (max-duration-short 10000)
+      (max-duration-short 1000)
       (min-duration-long 5000)
       (max-duration-long 30000))
 
@@ -105,22 +124,8 @@
 	    finally (progn (push new-dur last)
 			   (return new-dur))))))
 
-;; *** get-new-frequency
-;;;
-(let ((last-freqs '())
-      (min-freq 40)
-      (max-freq 600)
-      (ratios
-	(append '(1/2 2/3 3/4); 4/5 5/6 6/7 7/8)
-		'(2 3/2 4/3 5/4); 6/5 7/6 8/7)
-		'(3 2 5/3 3/2); 7/5 4/3 9/7)
-		'(1/3 1/2 3/5 2/3); 5/7 3/4 7/9)
-		'(4 5))))
-
-  (defun reset-last-freqs ()
-    (setf last-freqs '()))
-
-  (defun filter-similar-options (options)
+;; *** filter-similar-options
+(defun filter-similar-options (options)
     (let ((result '()))
       (loop for freq in (car options)
 	    when (every #'(lambda (ls) (member freq ls :test #'similar-freqp))
@@ -128,25 +133,63 @@
 	      do (push freq result))
       (or result (filter-similar-options (cdr options)))))
 
-  (defun pick-original-freqs (options last-n)
-    (let ((result '()))
-      (loop for freq in options
-	    unless (member freq
-			   (if (> (length last-freqs) last-n)
-			       (subseq last-freqs 0 last-n)
-			       last-freqs)
-			   :test #'similar-freqp)
-	      do (push freq result))
-      (or result (pick-original-freqs options (1- last-n)))))
+;; *** pick-original-freqs
+(defun pick-original-freqs (options last-freqs)
+  (unless options
+    (error "pick-original-freqs: no options!"))
+  (let ((result '()))
+    (loop for freq in options
+	  unless (member freq last-freqs :test #'similar-freqp)
+	    do (push freq result))
+    (or result
+	(pick-original-freqs
+	 options
+	 (subseq last-freqs 0 (1- (length last-freqs)))))))
+
+;; *** get-new-frequency
+;;;
+(defconstant +pad-ratios+
+  (append '(1/2 2/3 3/4)		; 4/5 5/6 6/7 7/8)
+	  '(2 3/2 4/3 5/4)		; 6/5 7/6 8/7)
+	  '(3 2 5/3 3/2)		; 7/5 4/3 9/7)
+	  '(1/3 1/2 3/5 2/3)		; 5/7 3/4 7/9)
+	  '(4 5)))
+
+(defconstant +con-ratios+
+  (append '(1/2 2/3 3/4 4/5 5/6 6/7 7/8)
+	  '(2 3/2 4/3 5/4 6/5 7/6 8/7)
+	  '(3 2 5/3 3/2 7/5 4/3 9/7)
+	  '(1/3 1/2 3/5 2/3 5/7 3/4 7/9)
+	  '(4 5)))
+
+(let ((last-pad-freqs '(528))
+      (last-con-freqs '(528))
+      (min-freq 40)
+      (max-freq 600))
+
+  (defun reset-last-freqs ()
+    (setf last-pad-freqs '(528))
+    (setf last-con-freqs '(528)))
 
   ;; for each playing freq: calculate possible harmonic intervals
   ;; compare lists from each freq, use those present on all lists. 
-  (defun get-new-frequency (&rest freqs)
-    (when (null freqs)
-      (push (if (null last-freqs) 528 (car last-freqs)) freqs))
+  (defun get-new-frequency (type &rest freqs)
     (let ((options '())
 	  (similar-options '())
+	  ratios
+	  last-freqs
 	  result)
+      ;; init with type
+      (case type
+	(pad (setf ratios +pad-ratios+
+		   last-freqs last-pad-freqs))
+	(contemplative (setf ratios +con-ratios+
+			     last-freqs last-con-freqs))
+	(otherwise (error "get-new-frequency: unknown type ~a" type)))
+      (setf last-freqs (subseq last-freqs 0 (min (length last-freqs)
+						 *min-no-repetitions*)))
+      (unless freqs
+	(push (car last-freqs) freqs))
       ;; calculate freqs from ratios for each input-freq
       (loop for freq in freqs
 	    do (push (loop for ratio in ratios
@@ -158,11 +201,15 @@
       (setf similar-options (filter-similar-options options))
       ;; try and pick the most original frequency
       (setf similar-options
-	    (pick-original-freqs similar-options *min-no-repetitions*))
+	    (pick-original-freqs
+	     similar-options
+	     last-freqs))
       ;; pick one
       ;; (setf result (nth (floor (* (random-relax) (length options))) options))
       (setf result (first (sort similar-options #'<)))
-      (push result last-freqs)
+      (case type
+	(pad (push result last-pad-freqs))
+	(contemplative (push result last-con-freqs)))
       (round result))))
 
 ;; *** generate-relaxing-notes
@@ -183,9 +230,10 @@
 		    collect note))
       ;; add new notes
       (let* ((active-pad-notes (remove-if-not #'is-pad active-notes))
-	     (new-pad-notes (add-pad-harmony active-pad-notes time)))
+	     (new-pad-notes (add-pad-harmony active-pad-notes time))
+	     (new-contemplative (add-contemplative active-notes time)))
 	(mapcar #'(lambda (note) (push note active-notes) (push note note-list))
-		new-pad-notes))
+		(append new-pad-notes new-contemplative)))
       ;; step forward in time 
       (incf time *relax-grid-mseconds*))
     ;; vary start-times

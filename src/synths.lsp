@@ -1,5 +1,7 @@
 ;; * synths
 
+(in-package :relax)
+
 ;; ** dreamy-pad
 
 (defun dreamy-pad (note &optional (i 0))

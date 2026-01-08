@@ -11,51 +11,41 @@
   (freq 440 :type number)		; in Hz
   (velocity 0.7 :type number)		; 0-1
   (time-left 0 :type integer)           ; in miliseconds
-  (type 'long))                         ; which role this note plays
+  (type 'pad))                          ; which role this note plays
 
 
 ;; ** generation
 
-;; *** add-harmony
-;;; TODO
-;;; Given a list of currently playing notes, which notes should additionally
+;; *** add-pad-harmony
+;;; Given a list of currently playing pad notes, which notes should additionally
 ;;; start to play? Return additional notes as a list.
-;;;
-(defun add-harmony (note-list &optional (time 0))
-  ;;(format t "~&time: ~a, ~&notelist: ~a" time note-list)
-  (let* ((new-notes '()))
-    ;; use the 'time-left slot to see how harmony developes.
-    ;; depending on how many notes are playing, add some
+(defun add-pad-harmony (note-list &optional (time 0))
+  (unless (every #'is-pad note-list)
+    (error "get-pad-harmony: I want only pad notes!"))
+  (let (new-note)
     (case (length note-list)
-      ;; when no note is playing, check last played long note and generate a
-      ;; long note that goes a few steps up or down.
-      ;; decide whether to add another note with recursive call.
-      (0 (push (make-note :start time
-			  :duration (get-long-duration) :type 'long
-			  :freq (get-new-frequency))
-	       new-notes)
-       (setf new-notes (append new-notes (add-harmony new-notes time))))
-      ;; check whether other note is long or not
-      (1 (push (make-note :start time
-			  :duration (get-long-duration) :type 'long
-			  :freq (apply #'get-new-frequency (mapcar #'note-freq note-list)))
-	       new-notes)
-       (setf new-notes
-	     (append new-notes (add-harmony (append note-list new-notes) time))))
-      ;; check whether other notes are long or not
-      (2 (push (make-note :start time
-			  :duration (get-long-duration) :type 'long
-			  :freq (apply #'get-new-frequency (mapcar #'note-freq note-list)))
-	       new-notes))
-      ;; check whether other notes are long or not
-      (3 (if (> (random-relax) 0.8)
-	     (push (make-note :start time
-			      :duration (get-long-duration) :type 'long
-			      :freq (apply #'get-new-frequency (mapcar #'note-freq note-list)))
-		   new-notes))))
-    ;; add new-notes to last-played and return them
-    ;; (loop for note in new-notes do (push note last-played))
-    new-notes))
+      (0 (setf
+	  new-note
+	  (make-note :start time
+		     :duration (get-long-duration)
+		     :type 'pad
+		     :freq (get-new-frequency)))
+       (cons new-note (add-pad-harmony (list new-note) time)))
+      ((1 2) (setf
+	      new-note
+	      (make-note :start time
+			 :duration (get-long-duration)
+			 :type 'pad
+			 :freq (apply #'get-new-frequency
+				      (mapcar #'note-freq note-list))))
+       (cons new-note (add-pad-harmony (cons new-note note-list) time)))
+      (3 (when (> (random-relax) 0.8)
+	   (list
+	    (make-note :start time
+		       :duration (get-long-duration)
+		       :type 'pad
+		       :freq (apply #'get-new-frequency
+				    (mapcar #'note-freq note-list)))))))))
 
 ;; *** similar-freqp
 ;;; check whether two frequencies are similar; two frequencies are considered
@@ -72,6 +62,10 @@
   (let* ((diff (abs (- dur1 dur2)))
 	 (min (min dur1 dur2)))
     (<= diff (* min (/ percent 100)))))
+
+;; *** is-pad
+(defun is-pad (note)
+  (equal 'pad (note-type note)))
 
 ;; *** find-sounds-with-sufficient-dur
 ;;; Find sounds in a soundpile that are long enough to be played at freq for dur
@@ -187,13 +181,15 @@
 		  do (decf (note-time-left note) *relax-grid-mseconds*)
 		  when (> (note-time-left note) 0)
 		    collect note))
-      ;; add harmony
-      (loop for note in (add-harmony active-notes time)
-	    do (push note active-notes)
-	       (push note note-list))
+      ;; add new notes
+      (let* ((active-pad-notes (remove-if-not #'is-pad active-notes))
+	     (new-pad-notes (add-pad-harmony active-pad-notes time)))
+	(mapcar #'(lambda (note) (push note active-notes) (push note note-list))
+		new-pad-notes))
       ;; step forward in time 
       (incf time *relax-grid-mseconds*))
     ;; vary start-times
+    ;; TODO only for short sounds, not pad?
     (mess-with-start-times note-list)))
 
 ;; ** modifiers

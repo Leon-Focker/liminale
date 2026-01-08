@@ -44,28 +44,14 @@
   (progn
     (reset-relax)
     (loop for i from 0
-	  for note in (generate-relaxing-notes 100)
+	  for note in (generate-relaxing-notes 10)
 	  collect (case (note-type note)
-		    (long
+		    (pad
 		     (setf (note-freq note) (/ (note-freq note) 2))
 		     (dreamy-pad note i))
 		    (short
 		     (pluck note i))
 		    (t )))))
-
-(wsound "moog-test" 2
-  (progn
-    (reset-relax)
-  (loop for note in (generate-relaxing-notes 100)
-	for start = (/ (note-start note) 1000.0)
-	for duration = (/ (note-duration note) 1000.0)
-	for freq = (note-freq note)
-	for sound = (find-with-id 'acc52 *acc-samples*)
-	for sound-freq = (car (fundamental-frequency sound))
-	for base-srt = (/ freq sound-freq)
-	collect (loop for mult in '(1 2 3)
-		      append (clm::simple-sine start duration freq 0.01)))))
-
 
 (stop-playing)
 

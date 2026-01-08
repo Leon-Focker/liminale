@@ -8,8 +8,9 @@
   (let* ((start (/ (note-start note) 1000.0))
 	 (duration (/ (note-duration note) 1000.0))
 	 (freq (note-freq note))
-	 (sounds (find-sounds-with-sufficient-dur
-		  duration freq *acc-samples-double*))
+	 (sounds (or (find-sounds-with-sufficient-dur
+		      duration freq *acc-samples-double*)
+		     (data *acc-samples-double*)))
 	 (sound (nth-mod i sounds))
 	 (sound-freq (car (fundamental-frequency sound)))
 	 (base-srt (/ freq sound-freq))
@@ -57,6 +58,10 @@
 		   :freq-env '(0 0  1 4000  100 0)
 		   :freq-env-expt 8))
      #+nil(clm::sine start duration freq 0.1 :amp-env amp-env))))
+
+;; ** splinter
+(defun splinter (file time)
+  (clm::splinter file time))
 
 
 ;; EOF synths.lsp

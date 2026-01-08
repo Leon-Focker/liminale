@@ -27,14 +27,14 @@
       (0 (setf
 	  new-note
 	  (make-note :start time
-		     :duration (get-long-duration)
+		     :duration (get-pad-duration)
 		     :type 'pad
 		     :freq (get-new-frequency 'pad)))
        (cons new-note (add-pad-harmony (list new-note) time)))
       ((1 2) (setf
 	      new-note
 	      (make-note :start time
-			 :duration (get-long-duration)
+			 :duration (get-pad-duration)
 			 :type 'pad
 			 :freq (apply #'get-new-frequency
 				      'pad
@@ -43,7 +43,7 @@
       (3 (when (> (random-relax) 0.8)
 	   (list
 	    (make-note :start time
-		       :duration (get-long-duration)
+		       :duration (get-pad-duration)
 		       :type 'pad
 		       :freq (apply #'get-new-frequency
 				    'pad
@@ -56,7 +56,7 @@
     (when (null contemplative-notes)
       (list
        (make-note :start time
-		  :duration (get-short-duration)
+		  :duration (get-contemplative-duration)
 		  :type 'contemplative
 		  :freq (apply #'get-new-frequency
 			       'contemplative
@@ -95,34 +95,48 @@
 	when (>= sound-dur required-dur) collect sound))
 
 ;; *** get-durations
-(let ((last '())
-      (min-duration-short 500)
-      (max-duration-short 1000)
-      (min-duration-long 5000)
-      (max-duration-long 30000))
+(let ((last-pad '())
+      (last-con '(500))
+      (min-duration-con 200)
+      (max-duration-con 600)
+      (min-duration-con-pause 2000)
+      (max-duration-con-pause 12000)
+      (min-duration-pad 5000)
+      (max-duration-pad 30000))
 
   (defun reset-last-durations ()
-    (setf last '()))
+    (setf last-pad '())
+    (setf last-con '(500)))
 
-;;; get a duration somewhere between 5 and 30 seconds
-  (defun get-long-duration ()
-    (get-duration-aux min-duration-long max-duration-long))
-;;; get a duration somewhere between 0.5 and 10 seconds
-  (defun get-short-duration ()
-    (get-duration-aux min-duration-short max-duration-short))
+;;; get a duration for the pad sounds, mostly random.
+  (defun get-pad-duration ()
+    (get-duration-aux last-pad min-duration-pad max-duration-pad))
   
-  (defun get-duration-aux (min-dur max-dur)
-    (let ((min-mult (ceiling min-dur *relax-grid-mseconds*))
-	  (max-mult (floor max-dur *relax-grid-mseconds*)))
-      (loop for random-nr = (random-nldd 0.8 (random-relax))
-	    for mult = (round (scale-to-log random-nr min-mult max-mult))
-	    for new-dur = (* mult *relax-grid-mseconds*)
-	    while (remove-if-not #'(lambda (x) (similar-durp x new-dur))
-				 (if (> (length last) *min-no-repetitions*)
-				     (subseq last 0 *min-no-repetitions*)
-				     last))
-	    finally (progn (push new-dur last)
-			   (return new-dur))))))
+;;; get a duration for the contemplative sounds.
+  (defun get-contemplative-duration ()
+    (let* ((last-dur (car last-con))
+	   (nr-of-reps (length (loop for i in last-con while (= i last-dur)
+				     collect i))))
+      (if (>= last-dur min-duration-con-pause)
+	  (get-duration-aux
+	   last-con min-duration-con max-duration-con)
+	  (if (< (random-relax) (* nr-of-reps 0.1))
+	      (get-duration-aux
+	       last-con min-duration-con-pause max-duration-con-pause)
+	      (progn (push last-dur last-con) last-dur))))))
+
+(defmacro get-duration-aux (last-ls min-dur max-dur)
+  `(let ((min-mult (ceiling ,min-dur *relax-grid-mseconds*))
+	 (max-mult (floor ,max-dur *relax-grid-mseconds*)))
+     (loop for random-nr = (random-nldd 0.8 (random-relax))
+	   for mult = (round (scale-to-log random-nr min-mult max-mult))
+	   for new-dur = (* mult *relax-grid-mseconds*)
+	   while (remove-if-not #'(lambda (x) (similar-durp x new-dur))
+				(subseq ,last-ls 0 (min (length ,last-ls)
+							*min-no-repetitions*)))
+	   finally (progn
+		     (push new-dur ,last-ls)
+		     (return new-dur)))))
 
 ;; *** filter-similar-options
 (defun filter-similar-options (options)

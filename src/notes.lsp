@@ -29,15 +29,14 @@
 	  (make-note :start time
 		     :duration (get-pad-duration)
 		     :type 'pad
-		     :freq (get-new-frequency 'pad)))
+		     :freq (get-new-pad-frequency)))
        (cons new-note (add-pad-harmony (list new-note) time)))
       ((1 2) (setf
 	      new-note
 	      (make-note :start time
 			 :duration (get-pad-duration)
 			 :type 'pad
-			 :freq (apply #'get-new-frequency
-				      'pad
+			 :freq (apply #'get-new-pad-frequency
 				      (mapcar #'note-freq note-list))))
        (cons new-note (add-pad-harmony (cons new-note note-list) time)))
       (3 (when (> (random-relax) 0.8)
@@ -45,8 +44,7 @@
 	    (make-note :start time
 		       :duration (get-pad-duration)
 		       :type 'pad
-		       :freq (apply #'get-new-frequency
-				    'pad
+		       :freq (apply #'get-new-pad-frequency
 				    (mapcar #'note-freq note-list)))))))))
 
 ;; *** add-contemplative
@@ -58,8 +56,7 @@
        (make-note :start time
 		  :duration (get-contemplative-duration)
 		  :type 'contemplative
-		  :freq (apply #'get-new-frequency
-			       'contemplative
+		  :freq (apply #'get-new-contemplative-frequency
 			       (mapcar #'note-freq note-list)))))))
 
 ;; *** similar-freqp
@@ -95,6 +92,10 @@
 	when (>= sound-dur required-dur) collect sound))
 
 ;; *** get-durations
+
+(defparameter *relax-grid-mseconds* 100)
+(defparameter *min-no-repetitions* 5)
+
 (let ((last-pad '())
       (last-con '(500))
       (min-duration-con 200)
@@ -110,7 +111,9 @@
 
 ;;; get a duration for the pad sounds, mostly random.
   (defun get-pad-duration ()
-    (get-duration-aux last-pad min-duration-pad max-duration-pad))
+    (get-duration-aux
+     last-pad #'(lambda (x) (push x last-pad))
+     min-duration-pad max-duration-pad))
   
 ;;; get a duration for the contemplative sounds.
   (defun get-contemplative-duration ()
@@ -119,24 +122,26 @@
 				     collect i))))
       (if (>= last-dur min-duration-con-pause)
 	  (get-duration-aux
-	   last-con min-duration-con max-duration-con)
+	   last-con #'(lambda (x) (push x last-con))
+	   min-duration-con max-duration-con)
 	  (if (< (random-relax) (* nr-of-reps 0.1))
 	      (get-duration-aux
-	       last-con min-duration-con-pause max-duration-con-pause)
+	       last-con #'(lambda (x) (push x last-con))
+	       min-duration-con-pause max-duration-con-pause)
 	      (progn (push last-dur last-con) last-dur))))))
 
-(defmacro get-duration-aux (last-ls min-dur max-dur)
-  `(let ((min-mult (ceiling ,min-dur *relax-grid-mseconds*))
-	 (max-mult (floor ,max-dur *relax-grid-mseconds*)))
-     (loop for random-nr = (random-nldd 0.8 (random-relax))
-	   for mult = (round (scale-to-log random-nr min-mult max-mult))
-	   for new-dur = (* mult *relax-grid-mseconds*)
-	   while (remove-if-not #'(lambda (x) (similar-durp x new-dur))
-				(subseq ,last-ls 0 (min (length ,last-ls)
-							*min-no-repetitions*)))
-	   finally (progn
-		     (push new-dur ,last-ls)
-		     (return new-dur)))))
+(defun get-duration-aux (last-ls setter-fn min-dur max-dur)
+  (let ((min-mult (ceiling min-dur *relax-grid-mseconds*))
+	(max-mult (floor max-dur *relax-grid-mseconds*)))
+    (loop for random-nr = (random-nldd 0.8 (random-relax))
+	  for mult = (round (scale-to-log random-nr min-mult max-mult))
+	  for new-dur = (* mult *relax-grid-mseconds*)
+	  while (remove-if-not #'(lambda (x) (similar-durp x new-dur))
+			       (subseq last-ls 0 (min (length last-ls)
+						      *min-no-repetitions*)))
+	  finally (progn
+		    (funcall setter-fn new-dur)
+		    (return new-dur)))))
 
 ;; *** filter-similar-options
 (defun filter-similar-options (options)
@@ -161,70 +166,63 @@
 	 (subseq last-freqs 0 (1- (length last-freqs)))))))
 
 ;; *** get-new-frequency
-;;;
-(defconstant +pad-ratios+
+;;; TODO make these constants later
+(defparameter +pad-ratios+
   (append '(1/2 2/3 3/4)		; 4/5 5/6 6/7 7/8)
 	  '(2 3/2 4/3 5/4)		; 6/5 7/6 8/7)
 	  '(3 2 5/3 3/2)		; 7/5 4/3 9/7)
 	  '(1/3 1/2 3/5 2/3)		; 5/7 3/4 7/9)
 	  '(4 5)))
 
-(defconstant +con-ratios+
-  (append '(1/2 2/3 3/4 4/5 5/6 6/7 7/8)
+(defparameter +con-ratios+
+  (append '(1 4/3 3/2 8/5 5/3 12/7 7/4)
 	  '(2 3/2 4/3 5/4 6/5 7/6 8/7)
 	  '(3 2 5/3 3/2 7/5 4/3 9/7)
-	  '(1/3 1/2 3/5 2/3 5/7 3/4 7/9)
-	  '(4 5)))
+	  '(2/3 1 6/5 4/3 10/7 3/2 14/9)
+	  '(4 5 6 7 8 9 10 11 12 13 14 15)))
+
+(defparameter +min-freq+ 40)
+(defparameter +max-freq+ 1200)
 
 (let ((last-pad-freqs '(528))
-      (last-con-freqs '(528))
-      (min-freq 40)
-      (max-freq 600))
+      (last-con-freqs '(528)))
 
   (defun reset-last-freqs ()
     (setf last-pad-freqs '(528))
     (setf last-con-freqs '(528)))
 
-  ;; for each playing freq: calculate possible harmonic intervals
-  ;; compare lists from each freq, use those present on all lists. 
-  (defun get-new-frequency (type &rest freqs)
-    (let ((options '())
-	  (similar-options '())
-	  ratios
-	  last-freqs
-	  result)
-      ;; init with type
-      (case type
-	(pad (setf ratios +pad-ratios+
-		   last-freqs last-pad-freqs))
-	(contemplative (setf ratios +con-ratios+
-			     last-freqs last-con-freqs))
-	(otherwise (error "get-new-frequency: unknown type ~a" type)))
-      (setf last-freqs (subseq last-freqs 0 (min (length last-freqs)
-						 *min-no-repetitions*)))
-      (unless freqs
-	(push (car last-freqs) freqs))
-      ;; calculate freqs from ratios for each input-freq
-      (loop for freq in freqs
-	    do (push (loop for ratio in ratios
-			   for new-freq = (* freq ratio)
-			   when (<= min-freq new-freq max-freq)
-			     collect new-freq)
-		     options))
-      ;; filter options
-      (setf similar-options (filter-similar-options options))
-      ;; try and pick the most original frequency
-      (setf similar-options
-	    (pick-original-freqs
-	     similar-options
-	     last-freqs))
-      ;; pick one
-      ;; (setf result (nth (floor (* (random-relax) (length options))) options))
-      (setf result (first (sort similar-options #'<)))
-      (case type
-	(pad (push result last-pad-freqs))
-	(contemplative (push result last-con-freqs)))
-      (round result))))
+  (defun get-new-pad-frequency (&rest freqs)
+    (get-new-frequency-aux last-pad-freqs #'(lambda (x) (push x last-pad-freqs)) freqs +pad-ratios+))
+
+  (defun get-new-contemplative-frequency (&rest freqs)
+    (get-new-frequency-aux last-con-freqs #'(lambda (x) (push x last-con-freqs)) freqs +con-ratios+
+			   #'(lambda (ls) (or (find (car last-con-freqs) ls :test #'(lambda (x y) (<= x y)))
+					 (first ls))))))
+
+(defun get-new-frequency-aux (last-ls setter-fn freqs ratios
+			      &optional (picking-fn #'first))
+  (let ((options '())
+	(similar-options '())
+	result)
+    (unless freqs (push (car last-ls) freqs))
+    ;; calculate freqs from ratios for each input-freq
+    (loop for freq in freqs
+	  do (push (loop for ratio in ratios
+			 for new-freq = (* freq ratio)
+			 when (<= +min-freq+ new-freq +max-freq+)
+			   collect new-freq)
+		   options))
+    ;; filter options
+    (setf similar-options (filter-similar-options options))
+    ;; try and pick the most original frequency
+    (setf similar-options
+	  (pick-original-freqs
+	   similar-options
+	   (subseq last-ls 0 (min (length last-ls) *min-no-repetitions*))))
+    ;; pick one
+    (setf result (funcall picking-fn (sort similar-options #'<)))
+    (funcall setter-fn result)
+    (round result)))
 
 ;; *** generate-relaxing-notes
 ;;; Generate the note material for some relaxing music, focused on long, slow,

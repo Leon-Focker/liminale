@@ -31,9 +31,6 @@
 	  (store-in-text-file sp text-file)
 	  sp))))
 
-(defparameter *relax-grid-mseconds* 100)
-(defparameter *min-no-repetitions* 5)
-
 ;; ** Generating Soundfiles
 
 (format t "~& ~&relaxing now :3~& ~&")
@@ -44,7 +41,7 @@
   (progn
     (reset-relax)
     (loop for i from 0
-	  for note in (generate-relaxing-notes 10)
+	  for note in (generate-relaxing-notes 20)
 	  collect (case (note-type note)
 		    (pad
 		     (setf (note-freq note) (/ (note-freq note) 2))

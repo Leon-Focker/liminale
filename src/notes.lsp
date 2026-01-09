@@ -93,43 +93,48 @@
 
 ;; *** get-durations
 
+;;; Some (possibly user-defined) values that guide the duration-selection.
 (defparameter *relax-grid-mseconds* 100)
 (defparameter *min-no-repetitions* 5)
+(defparameter *min-duration-con* 200)
+(defparameter *max-duration-con* 600)
+(defparameter *min-duration-con-pause* 5000)
+(defparameter *max-duration-con-pause* 15000)
+(defparameter *min-duration-pad* 5000)
+(defparameter *max-duration-pad* 30000)
 
+;;; Functions for duration selection follow here
 (let ((last-pad '())
-      (last-con '(500))
-      (min-duration-con 200)
-      (max-duration-con 600)
-      (min-duration-con-pause 2000)
-      (max-duration-con-pause 12000)
-      (min-duration-pad 5000)
-      (max-duration-pad 30000))
+      (last-con '(500)))
 
   (defun reset-last-durations ()
     (setf last-pad '())
     (setf last-con '(500)))
 
-;;; get a duration for the pad sounds, mostly random.
+   ;;; get a duration for the pad sounds, mostly random.
   (defun get-pad-duration ()
     (get-duration-aux
      last-pad #'(lambda (x) (push x last-pad))
-     min-duration-pad max-duration-pad))
+     *min-duration-pad* *max-duration-pad*))
   
-;;; get a duration for the contemplative sounds.
+  ;;; get a duration for the contemplative sounds.
   (defun get-contemplative-duration ()
     (let* ((last-dur (car last-con))
 	   (nr-of-reps (length (loop for i in last-con while (= i last-dur)
 				     collect i))))
-      (if (>= last-dur min-duration-con-pause)
+      (if (>= last-dur *min-duration-con-pause*)
 	  (get-duration-aux
 	   last-con #'(lambda (x) (push x last-con))
-	   min-duration-con max-duration-con)
+	   *min-duration-con* *max-duration-con*)
 	  (if (< (random-relax) (* nr-of-reps 0.1))
 	      (get-duration-aux
 	       last-con #'(lambda (x) (push x last-con))
-	       min-duration-con-pause max-duration-con-pause)
+	       *min-duration-con-pause* *max-duration-con-pause*)
 	      (progn (push last-dur last-con) last-dur))))))
 
+;;; Aux-function for getting a random but original duration between min-dur
+;;; and max-dur. last-ls is a list of durations to not chose, setter-fn should
+;;; be a lambda-function which adds the new value to a list.
 (defun get-duration-aux (last-ls setter-fn min-dur max-dur)
   (let ((min-mult (ceiling min-dur *relax-grid-mseconds*))
 	(max-mult (floor max-dur *relax-grid-mseconds*)))
@@ -184,21 +189,37 @@
 (defparameter +min-freq+ 40)
 (defparameter +max-freq+ 1200)
 
+;;; Functions for frequency selection follow here
 (let ((last-pad-freqs '(528))
       (last-con-freqs '(528)))
 
   (defun reset-last-freqs ()
     (setf last-pad-freqs '(528))
     (setf last-con-freqs '(528)))
-
+  
+  ;;; get a frequency for the pad sounds 
   (defun get-new-pad-frequency (&rest freqs)
-    (get-new-frequency-aux last-pad-freqs #'(lambda (x) (push x last-pad-freqs)) freqs +pad-ratios+))
-
+    (get-new-frequency-aux
+     last-pad-freqs #'(lambda (x) (push x last-pad-freqs))
+     freqs +pad-ratios+))
+  
+  ;;; get a frequency for the contemplative sounds
   (defun get-new-contemplative-frequency (&rest freqs)
-    (get-new-frequency-aux last-con-freqs #'(lambda (x) (push x last-con-freqs)) freqs +con-ratios+
-			   #'(lambda (ls) (or (find (car last-con-freqs) ls :test #'(lambda (x y) (<= x y)))
-					 (first ls))))))
+    (get-new-frequency-aux
+     last-con-freqs #'(lambda (x) (push x last-con-freqs))
+     freqs +con-ratios+
+     #'(lambda (ls) (or (find (car last-con-freqs) ls :test #'(lambda (x y) (<= x y)))
+		   (first ls))))))
 
+;;; Aux-function for getting a frequency that fits a list of other frequencies.
+;;; - last-ls: a list of freqs to avoid.
+;;; - setter-fn: a function that adds the new value to a list.
+;;; - freqs: list of other frequencies
+;;; - ratios: a list of ratios that the new frequency should be compared to the
+;;;   freqs in freqs.
+;;; - picking-fn: a list of options will be generated, sorted from lowest to
+;;;   highest. This function will be called to select one of these frequencies.
+;;;   If none is provided, the first is chosen.
 (defun get-new-frequency-aux (last-ls setter-fn freqs ratios
 			      &optional (picking-fn #'first))
   (let ((options '())

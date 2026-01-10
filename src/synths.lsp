@@ -33,7 +33,7 @@
 
 ;; ** pluck
 (defun pluck (note &optional (i 0))
-  (let* ((amp 0.17)
+  (let* ((amp (/ (note-velocity note) 4))
 	 (start (/ (note-start note) 1000.0))
 	 (duration 0.5)
 	 (freq (note-freq note))
@@ -64,7 +64,7 @@
 			  (clm::sine 0 duration (* mult freq) amp :amp-env amp-env)))))
     (clm::simple-echo moog-sound start
 		      :delay (note-delay-time note)
-		      :feedback 0.6))))
+		      :feedback 0.7))))
 
 ;; ** splinter
 (defun splinter (file time)

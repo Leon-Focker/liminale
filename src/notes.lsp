@@ -104,8 +104,8 @@
 (defparameter *max-duration-con* 600)
 (defparameter *min-duration-con-pause* 5000)
 (defparameter *max-duration-con-pause* 15000)
-(defparameter *min-duration-pad* 5000)
-(defparameter *max-duration-pad* 30000)
+(defparameter *min-duration-pad* 10000)
+(defparameter *max-duration-pad* 40000)
 
 ;;; Functions for duration selection follow here
 (let ((last-pad '())

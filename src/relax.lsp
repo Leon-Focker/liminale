@@ -41,7 +41,7 @@
   (progn
     (reset-relax)
     (loop for i from 0
-	  for note in (generate-relaxing-notes 20)
+	  for note in (generate-relaxing-notes 10)
 	  collect (case (note-type note)
 		    (pad
 		     (setf (note-freq note) (/ (note-freq note) 2))
@@ -56,5 +56,8 @@
 ;;; - modulate pluck velocity
 ;;; - noise layer with splinter
 ;;; - maybe modulate pluck start times?
+;;; - modulate soundpile / Sample-Auswahl
+
+;;; - possibly capable of multichannel-audio generation -> Intro-Musik NA
 
 ;; EOF relax.lsp

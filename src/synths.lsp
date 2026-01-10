@@ -42,26 +42,31 @@
 	 (sound-freq (car (fundamental-frequency sound)))
 	 (base-srt (/ freq sound-freq))
 	 (amp-env '(0 1  100 0)))
-    (append
-     (loop for mult in '(1 2 3)
-	   append (clm::moog
-		   (path sound)
-		   start
-		   :start 1
-		   :amp-env-expt 4
-		   :amp 0.2
-		   :amp-env amp-env
-		   :moog t
-		   :srt (* base-srt mult)
-		   :duration duration
-		   :res-env '(0 0.5  1 0.5)
-		   :freq-env '(0 0  1 4000  100 0)
-		   :freq-env-expt 8))
-     #+nil(clm::sine start duration freq 0.1 :amp-env amp-env))))
+  (clm::sound-let
+      ((moog-sound (:statistics nil)
+		   (loop for mult in '(1 2 3)
+			 append
+			 (append
+			  (clm::moog
+			   (path sound)
+			   0
+			   :start 1
+			   :amp-env-expt 4
+			   :amp 0.2
+			   :amp-env amp-env
+			   :moog t
+			   :srt (* base-srt mult)
+			   :duration duration
+			   :res-env '(0 0.5  1 0.5)
+			   :freq-env '(0 0  1 4000  100 0)
+			   :freq-env-expt 8)
+			  (clm::sine 0 duration (* mult freq) 0.2 :amp-env amp-env)))))
+    (clm::simple-echo moog-sound start
+		      :delay (note-delay-time note)
+		      :feedback 0.25))))
 
 ;; ** splinter
 (defun splinter (file time)
   (clm::splinter file time))
-
 
 ;; EOF synths.lsp

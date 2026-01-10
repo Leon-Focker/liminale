@@ -37,10 +37,11 @@
 "                                                                " 
 "                                                                "
 |#
-(defun get-sine-modulator (period-in-seconds)
+(defun get-sine-modulator (period-in-seconds &optional (phase-offset 0))
   (make-modulator :fn #'(lambda (time-in-seconds)
-			  (/ (1+ (sin (/ (* 2 pi time-in-seconds)
-					 period-in-seconds)))
+			  (/ (1+ (sin (+ (/ (* 2 pi time-in-seconds)
+					    period-in-seconds)
+					 phase-offset)))
 			     2))))
 
 ;;; *** get-saw-modulator
@@ -97,16 +98,17 @@
 "                                                                " 
 "                                                                " 
 |#
-(defun get-cut-off-sine-modulator
-    (period-in-seconds
-     &optional (from-bottom 0.3) (from-top 0) (y-offset -0.3) (x-offset (* pi 3/2)))
-  (make-modulator :fn #'(lambda (time-in-seconds)
-			  (+ (max (min (/ (1+ (sin (+ (/ (* 2 pi time-in-seconds)
-							 period-in-seconds)
-						      x-offset)))
-					  2)
-				       (- 1 from-top))
-				  from-bottom)
-			     y-offset))))
+(defun get-cut-off-sine-modulator (period-in-seconds
+				   &optional (from-bottom 0.3) (from-top 0)
+				     (y-offset -0.3) (phase-offset (* pi 3/2)))
+  (make-modulator
+   :fn #'(lambda (time-in-seconds)
+	   (+ (max (min (/ (1+ (sin (+ (/ (* 2 pi time-in-seconds)
+					  period-in-seconds)
+				       phase-offset)))
+			   2)
+			(- 1 from-top))
+		   from-bottom)
+	      y-offset))))
 
 ;; EOF modulators.lsp

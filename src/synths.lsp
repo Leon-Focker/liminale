@@ -37,9 +37,12 @@
   (let* ((start (/ (note-start note) 1000.0))
 	 (duration (/ (note-duration note) 1000.0))
 	 (freq (note-freq note))
+	 (soundpile (if (< (random-relax) (note-velocity note))
+			*acc-samples-double*
+			*acc-samples-basic*))
 	 (sounds (or (find-sounds-with-sufficient-dur
-		      duration freq *acc-samples-double*)
-		     (data *acc-samples-double*)))
+		      duration freq soundpile)
+		     (data soundpile)))
 	 (sound (nth-mod i sounds))
 	 (sound-freq (car (fundamental-frequency sound)))
 	 (base-srt (/ freq sound-freq))

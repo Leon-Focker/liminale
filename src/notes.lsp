@@ -21,36 +21,39 @@
 ;;; Given a list of currently playing pad notes, which notes should additionally
 ;;; start to play? Return additional notes as a list.
 ;;; TODO maybe velocity can determine sample selection?
-(defun add-pad-harmony (note-list &optional (time 0))
-  (unless (every #'is-pad note-list)
-    (error "get-pad-harmony: I want only pad notes!"))
-  (let (new-note)
-    (case (length note-list)
-      (0 (setf
-	  new-note
-	  (make-note :start time
-		     :duration (get-pad-duration)
-		     :type 'pad
-		     :velocity 1.0
-		     :freq (get-new-pad-frequency)))
-       (cons new-note (add-pad-harmony (list new-note) time)))
-      ((1 2) (setf
-	      new-note
-	      (make-note :start time
-			 :duration (get-pad-duration)
-			 :type 'pad
-			 :velocity 1.0
-			 :freq (apply #'get-new-pad-frequency
-				      (mapcar #'note-freq note-list))))
-       (cons new-note (add-pad-harmony (cons new-note note-list) time)))
-      (3 (when (> (random-relax) 0.8)
-	   (list
+(defparameter *pad-velocity-period* 300) ; in seconds
+
+(let ((vel-mod (get-sine-modulator *pad-velocity-period* (* pi 1/2))))
+  (defun add-pad-harmony (note-list &optional (time 0))
+    (unless (every #'is-pad note-list)
+      (error "get-pad-harmony: I want only pad notes!"))
+    (let (new-note)
+      (case (length note-list)
+	(0 (setf
+	    new-note
 	    (make-note :start time
 		       :duration (get-pad-duration)
 		       :type 'pad
-		       :velocity 1.0
-		       :freq (apply #'get-new-pad-frequency
-				    (mapcar #'note-freq note-list)))))))))
+		       :velocity (get-mod-value vel-mod time)
+		       :freq (get-new-pad-frequency)))
+	 (cons new-note (add-pad-harmony (list new-note) time)))
+	((1 2) (setf
+		new-note
+		(make-note :start time
+			   :duration (get-pad-duration)
+			   :type 'pad
+			   :velocity  (get-mod-value vel-mod time)
+			   :freq (apply #'get-new-pad-frequency
+					(mapcar #'note-freq note-list))))
+	 (cons new-note (add-pad-harmony (cons new-note note-list) time)))
+	(3 (when (> (random-relax) 0.8)
+	     (list
+	      (make-note :start time
+			 :duration (get-pad-duration)
+			 :type 'pad
+			 :velocity (get-mod-value vel-mod time)
+			 :freq (apply #'get-new-pad-frequency
+				      (mapcar #'note-freq note-list))))))))))
 
 ;; *** add-contemplative
 ;;; Given a list of currently playing pad notes, add some contemplative notes.

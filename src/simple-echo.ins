@@ -1,0 +1,45 @@
+;; * simple-echo
+
+(in-package :clm)
+
+;; *** simple-echo
+(definstrument simple-echo (file time
+			    &key (delay 1) (feedback 0.5) (start 0) (time-after 2))
+  (unless (> delay 0)
+    (error "simple-echo: delay should be greater than 0 but is ~a" delay))
+  (let* ((st (floor (* time *srate*)))
+         (start-sample (floor (* *srate* start)))
+         (stereo-input (= 2 (sound-chans file)))
+	 (delay-in-samples (floor (* *srate* delay)))
+         (fA (open-input* file :start start-sample))
+         (fB (when stereo-input 
+               (open-input* file :channel 1 :start start-sample)))
+	 (inputA (make-readin :file fA))
+         (inputB (when stereo-input 
+		   (make-readin :file fB :channel 1)))
+	 (bufferA (make-array delay-in-samples :initial-element 0.0))
+	 (bufferB (when stereo-input
+		    (make-array delay-in-samples :initial-element 0.0)))
+         (dur (- (sound-duration file) start))
+         (nd (+ st (floor (* *srate* dur)) (floor (* time-after *srate*))))
+	 (outa-val 0.0)
+         (outb-val 0.0))
+    (Run
+     (loop for i from st to nd do
+       (let* ((valA (readin inputA))
+	      (valB (when stereo-input (readin inputB)))
+	      (idx (mod i delay-in-samples))
+	      (buffer-valA (aref bufferA idx))
+	      (buffer-valB (aref bufferB idx)))
+	 (setf outa-val (+ valA buffer-valA)
+	       (aref bufferA idx) (* outa-val feedback))
+	 (if stereo-input
+	     (setf outb-val (+ valB buffer-valB)
+		   (aref bufferB idx) (* outb-val feedback)))
+	 ;; sample output
+	 (outa i outa-val)
+	 (outb i (if stereo-input 
+		     outb-val
+		     outa-val)))))))
+
+;; EOF simple-echo.ins

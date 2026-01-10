@@ -7,8 +7,8 @@
 
 ;; *** get-modulator-value
 ;;; Time in miliseconds -> some y-value
-(defun get-mod-value (modulator time)
-  (funcall (modulator-fn modulator) (/ time 1000)))
+(defun get-mod-value (modulator time-in-ms)
+  (funcall (modulator-fn modulator) (/ time-in-ms 1000)))
 
 ;; ** some modulators
 
@@ -79,15 +79,15 @@
 		 collect (get-mod-value (get-cut-off-sine-modulator 33)
 					(* 1000 i))))
 
-"     __                   __                   __               " 
-"    _  __                _  __               __  __             " 
-"   _                    _                                       " 
-"  _      _             _      _             _      _            " 
-"          _                    _                                " 
-" _                    _                    _        _           " 
-"_          _         _          _         _          _         _" 
-"            _                                                   " 
-"             ________            _________            _________ " 
+"          ___                  __                   __          " 
+"         _   _                _  __                _  __        " 
+"        _                    _                    _             " 
+"       _      _             _      _             _      _       " 
+"               _                    _                    _      " 
+"      _                    _                    _               " 
+"                _         _          _         _          _     " 
+"     _           _                    _                         " 
+"_____             ________             ________            _____" 
 "                                                                " 
 "                                                                " 
 "                                                                " 
@@ -95,16 +95,18 @@
 "                                                                " 
 "                                                                " 
 "                                                                " 
-"                                                                "
+"                                                                " 
 |#
 (defun get-cut-off-sine-modulator
-    (period-in-seconds &optional (from-bottom 0.3) (from-top 0) (offset -0.3))
+    (period-in-seconds
+     &optional (from-bottom 0.3) (from-top 0) (y-offset -0.3) (x-offset (* pi 3/2)))
   (make-modulator :fn #'(lambda (time-in-seconds)
-			  (+ (max (min (/ (1+ (sin (/ (* 2 pi time-in-seconds)
-						      period-in-seconds)))
+			  (+ (max (min (/ (1+ (sin (+ (/ (* 2 pi time-in-seconds)
+							 period-in-seconds)
+						      x-offset)))
 					  2)
 				       (- 1 from-top))
 				  from-bottom)
-			     offset))))
+			     y-offset))))
 
 ;; EOF modulators.lsp

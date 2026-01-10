@@ -20,6 +20,7 @@
 ;; *** add-pad-harmony
 ;;; Given a list of currently playing pad notes, which notes should additionally
 ;;; start to play? Return additional notes as a list.
+;;; TODO maybe velocity can determine sample selection?
 (defun add-pad-harmony (note-list &optional (time 0))
   (unless (every #'is-pad note-list)
     (error "get-pad-harmony: I want only pad notes!"))
@@ -30,6 +31,7 @@
 	  (make-note :start time
 		     :duration (get-pad-duration)
 		     :type 'pad
+		     :velocity 1.0
 		     :freq (get-new-pad-frequency)))
        (cons new-note (add-pad-harmony (list new-note) time)))
       ((1 2) (setf
@@ -37,6 +39,7 @@
 	      (make-note :start time
 			 :duration (get-pad-duration)
 			 :type 'pad
+			 :velocity 1.0
 			 :freq (apply #'get-new-pad-frequency
 				      (mapcar #'note-freq note-list))))
        (cons new-note (add-pad-harmony (cons new-note note-list) time)))
@@ -45,23 +48,27 @@
 	    (make-note :start time
 		       :duration (get-pad-duration)
 		       :type 'pad
+		       :velocity 1.0
 		       :freq (apply #'get-new-pad-frequency
 				    (mapcar #'note-freq note-list)))))))))
 
 ;; *** add-contemplative
 ;;; Given a list of currently playing pad notes, add some contemplative notes.
-(defun add-contemplative (note-list &optional (time 0))
-  (let ((contemplative-notes (remove-if-not #'is-contemplative note-list)))
-    (when (null contemplative-notes)
-      (let ((duration (get-contemplative-duration)))
-	(list
-	 (make-note :start time
-		    :duration duration
-		    :type 'contemplative
-		    :velocity 0.5
-		    :delay-time (scale-until-in-range (/ duration 1000) 0.2 0.45 3)
-		    :freq (apply #'get-new-contemplative-frequency
-				 (mapcar #'note-freq note-list))))))))
+(defparameter *conteplative-velocity-period* 100) ; in seconds
+
+(let ((vel-mod (get-cut-off-sine-modulator *conteplative-velocity-period* 0.3 0.2)))
+  (defun add-contemplative (note-list &optional (time 0))
+    (let ((contemplative-notes (remove-if-not #'is-contemplative note-list)))
+      (when (null contemplative-notes)
+	(let ((duration (get-contemplative-duration)))
+	  (list
+	   (make-note :start time
+		      :duration duration
+		      :type 'contemplative
+		      :velocity (get-mod-value vel-mod time) ; between 0.0 and 0.5
+		      :delay-time (scale-until-in-range (/ duration 1000) 0.2 0.45 3)
+		      :freq (apply #'get-new-contemplative-frequency
+				   (mapcar #'note-freq note-list)))))))))
 
 ;; *** is-pad
 (defun is-pad (note)

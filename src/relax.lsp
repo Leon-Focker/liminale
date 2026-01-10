@@ -52,4 +52,9 @@
 
 (stop-playing)
 
+;;; TODO
+;;; - modulate pluck velocity
+;;; - noise layer with splinter
+;;; - maybe modulate pluck start times?
+
 ;; EOF relax.lsp

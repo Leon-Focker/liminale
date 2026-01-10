@@ -58,7 +58,8 @@
 	 (make-note :start time
 		    :duration duration
 		    :type 'contemplative
-		    :delay-time (scale-until-in-range duration 0.2 0.5)
+		    :velocity 0.5
+		    :delay-time (scale-until-in-range (/ duration 1000) 0.2 0.45 3)
 		    :freq (apply #'get-new-contemplative-frequency
 				 (mapcar #'note-freq note-list))))))))
 

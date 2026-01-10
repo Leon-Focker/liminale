@@ -32,6 +32,14 @@
         (log-max (log max)))
     (exp (+ log-min (* x (- log-max log-min))))))
 
+;; ** scale-until-in-range
+(defun scale-until-in-range (value min max &optional (factor 2))
+  (if (<= min value max)
+      value
+      (if (> value max)
+	  (scale-until-in-range (/ value factor) min max)
+	  (scale-until-in-range (* value factor) min max))))
+
 ;; ** CLM
 
 (defmacro wsound (name out-channels &body body)

@@ -4,14 +4,15 @@
 
 (defstruct (note
             (:constructor make-note
-                (&key start duration freq velocity type
+                (&key start duration freq velocity type delay-time
                  &aux (time-left duration))))
   (start 0 :type integer)		; in miliseconds
   (duration 0 :type integer)		; in miliseconds
   (freq 440 :type number)		; in Hz
   (velocity 0.7 :type number)		; 0-1
   (time-left 0 :type integer)           ; in miliseconds
-  (type 'pad))                          ; which role this note plays
+  (type 'pad)                           ; which role this note plays
+  (delay-time 0.5 :type number))        ; delay time, only applies to some sounds
 
 
 ;; ** generation
@@ -52,12 +53,14 @@
 (defun add-contemplative (note-list &optional (time 0))
   (let ((contemplative-notes (remove-if-not #'is-contemplative note-list)))
     (when (null contemplative-notes)
-      (list
-       (make-note :start time
-		  :duration (get-contemplative-duration)
-		  :type 'contemplative
-		  :freq (apply #'get-new-contemplative-frequency
-			       (mapcar #'note-freq note-list)))))))
+      (let ((duration (get-contemplative-duration)))
+	(list
+	 (make-note :start time
+		    :duration duration
+		    :type 'contemplative
+		    :delay-time (scale-until-in-range duration 0.2 0.5)
+		    :freq (apply #'get-new-contemplative-frequency
+				 (mapcar #'note-freq note-list))))))))
 
 ;; *** similar-freqp
 ;;; check whether two frequencies are similar; two frequencies are considered

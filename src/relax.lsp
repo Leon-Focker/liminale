@@ -4,33 +4,6 @@
 
 ;; ** Globals
 
-(defparameter *acc-samples*
-  (let ((text-file (relax-path "acc-samples.txt")))
-    (if (probe-file text-file)
-	(load-from-file text-file)
-	(let ((sp (soundpile-from-folder
-		   'accordion "/E/relax/acc_samples/" :analyse t)))
-	  (store-in-text-file sp text-file)
-	  sp))))
-
-(defparameter *acc-samples-double*
-  (let ((text-file (relax-path "acc-samples-double.txt")))
-    (if (probe-file text-file)
-	(load-from-file text-file)
-	(let ((sp (soundpile-from-folder
-		   'accordion "/E/relax/samples/double/" :analyse t)))
-	  (store-in-text-file sp text-file)
-	  sp))))
-
-(defparameter *acc-samples-basic*
-  (let ((text-file (relax-path "acc-samples-basic.txt")))
-    (if (probe-file text-file)
-	(load-from-file text-file)
-	(let ((sp (soundpile-from-folder
-		   'accordion "/E/relax/samples/basic/" :analyse t)))
-	  (store-in-text-file sp text-file)
-	  sp))))
-
 (setf clm::*srate* 48000)
 
 ;; ** Generating Soundfiles

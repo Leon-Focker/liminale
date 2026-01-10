@@ -31,6 +31,8 @@
 	  (store-in-text-file sp text-file)
 	  sp))))
 
+(setf clm::*srate* 48000)
+
 ;; ** Generating Soundfiles
 
 (format t "~& ~&relaxing now :3~& ~&")

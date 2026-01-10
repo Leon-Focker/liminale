@@ -72,4 +72,39 @@
 			  (/ (mod time-in-seconds period-in-seconds)
 			     period-in-seconds))))
 
+;; *** get-cut-off-sine-modulator
+;;; Example:
+#|
+(visualize (loop for i from 0 to 100
+		 collect (get-mod-value (get-cut-off-sine-modulator 33)
+					(* 1000 i))))
+
+"     __                   __                   __               " 
+"    _  __                _  __               __  __             " 
+"   _                    _                                       " 
+"  _      _             _      _             _      _            " 
+"          _                    _                                " 
+" _                    _                    _        _           " 
+"_          _         _          _         _          _         _" 
+"            _                                                   " 
+"             ________            _________            _________ " 
+"                                                                " 
+"                                                                " 
+"                                                                " 
+"                                                                " 
+"                                                                " 
+"                                                                " 
+"                                                                " 
+"                                                                "
+|#
+(defun get-cut-off-sine-modulator
+    (period-in-seconds &optional (from-bottom 0.3) (from-top 0) (offset -0.3))
+  (make-modulator :fn #'(lambda (time-in-seconds)
+			  (+ (max (min (/ (1+ (sin (/ (* 2 pi time-in-seconds)
+						      period-in-seconds)))
+					  2)
+				       (- 1 from-top))
+				  from-bottom)
+			     offset))))
+
 ;; EOF modulators.lsp

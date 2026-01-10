@@ -63,22 +63,6 @@
 		    :freq (apply #'get-new-contemplative-frequency
 				 (mapcar #'note-freq note-list))))))))
 
-;; *** similar-freqp
-;;; check whether two frequencies are similar; two frequencies are considered
-;;; similar when one is no more than 4% greater than the other.
-(defun similar-freqp (freq1 freq2 &optional (percent 4))
-  (let* ((diff (abs (- freq1 freq2)))
-	 (min (min freq1 freq2)))
-    (<= diff (* min (/ percent 100)))))
-
-;; *** similar-durp
-;;; check whether two durations are similar; two durations are considered
-;;; similar when one is no more than 10% greater than the other.
-(defun similar-durp (dur1 dur2 &optional (percent 10))
-  (let* ((diff (abs (- dur1 dur2)))
-	 (min (min dur1 dur2)))
-    (<= diff (* min (/ percent 100)))))
-
 ;; *** is-pad
 (defun is-pad (note)
   (equal 'pad (note-type note)))
@@ -86,14 +70,6 @@
 ;; *** is-contemplative
 (defun is-contemplative (note)
   (equal 'contemplative (note-type note)))
-
-;; *** find-sounds-with-sufficient-dur
-;;; Find sounds in a soundpile that are long enough to be played at freq for dur
-(defun find-sounds-with-sufficient-dur (dur freq soundpile)
-  (loop for sound in (data soundpile)
-	for sound-dur = (duration sound)
-	for required-dur = (* (/ freq (car (fundamental-frequency sound))) dur)
-	when (>= sound-dur required-dur) collect sound))
 
 ;; *** get-durations
 
@@ -273,20 +249,11 @@
 		(append new-pad-notes new-contemplative)))
       ;; step forward in time 
       (incf time *relax-grid-mseconds*))
-    ;; vary start-times
-    ;; TODO only for short sounds, not pad?
-    (mess-with-start-times note-list)))
-
-;; ** modifiers
-
-;; *** mess-with-start-times
-;;; TODO
-(defun mess-with-start-times (note-list)
-  ;; I want some sections to have regular rhythms and some to be more
-  ;; 'arbitrary' -> shifting notes with fixed seed randomness depending on
-  ;; sine-wave-esque multiplier...?
-  note-list
-  )
+    ;; TODO
+    ;; I want some sections to have regular rhythms (for the short sounds) and
+    ;; some to be more 'arbitrary' -> shifting notes with fixed seed randomness.
+    ;; Use something like (random (get-cut-off-sine-modulator (* 5 60))).
+    note-list))
 
 ;; ** tests
 

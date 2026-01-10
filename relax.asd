@@ -9,6 +9,7 @@
   :pathname "src/"
   :components ((:file "package")
 	       (:file "helpers")
+	       (:file "modulators")
 	       (:file "notes")
 	       (:file "synths")
 	       (:file "relax")))

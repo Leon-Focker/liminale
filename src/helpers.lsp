@@ -46,7 +46,7 @@
   `(with-sound (:header-type clm::mus-riff :sampling-rate 48000
 		:output (format nil "~a~a" (relax-path ,name) ".wav")
 		:channels ,out-channels :play t :scaled-to 0.98
-		:force-recomputation nil)
+		:force-recomputation nil :statistics nil)
      ,@body))
 
 ;; EOF helpers.lsp

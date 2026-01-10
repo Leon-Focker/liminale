@@ -2,10 +2,6 @@
 
 ;; * relaxing...
 
-;; ** Globals
-
-(setf clm::*srate* 48000)
-
 ;; ** Generating Soundfiles
 
 (format t "~& ~&relaxing now :3~& ~&")

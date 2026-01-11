@@ -100,7 +100,22 @@
 		      :feedback 0.7))))
 
 ;; ** splinter
-(defun splinter (file time)
-  (clm::splinter file time))
+(defun splinter (note)
+  (let* ((start (/ (note-start note) 1000.0))
+	 (duration (/ (note-duration note) 1000.0))
+	 (vel (note-velocity note))
+	 (file "/E/liminale/samples/accordion_perc.wav"))
+    (when (> vel 0.5)
+      (loop for chan from 0 to 1
+	    append 
+	    (clm::splinter file start :channel chan
+				      :duration duration
+				      :start 0 ; TODO 
+				      :end 0   ; TODO
+				      :grain-env '(0 0.01 100 0.01) ; TODO
+				      :center-deviation-env '(0 0.3  100 0.3)
+				      :voices 2
+				      :srt 1.0 ; TODO
+				      )))))
 
 ;; EOF synths.lsp

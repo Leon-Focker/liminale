@@ -25,7 +25,7 @@
 (let ((vel-mod (get-sine-modulator *pad-velocity-period* (* pi 1/2))))
   (defun add-pad-harmony (note-list &optional (time 0))
     (unless (every #'is-pad note-list)
-      (error "get-pad-harmony: I want only pad notes!"))
+      (error "add-pad-harmony: I want only pad notes!"))
     (let ((new-note
 	    (make-note :start time
 		       :duration (get-pad-duration)
@@ -35,17 +35,17 @@
 	(0
 	 (setf (note-freq new-note) (get-new-pad-frequency))
 	 (cons new-note (add-pad-harmony (list new-note) time)))
-	((1 2) 
+	((1 2 3 4 5) 
 	 (setf (note-freq new-note)
 	       (apply #'get-new-pad-frequency (mapcar #'note-freq note-list)))
 	 (cons new-note (add-pad-harmony (cons new-note note-list) time)))
-	(3
+	(6
 	 ;; TODO this probability could depend on grid-size
 	 (when (> (random-liminale) 0.8)
 	   (setf (note-freq new-note)
 		 (apply #'get-new-pad-frequency (mapcar #'note-freq note-list)))
 	   (list new-note)))
-	(4
+	(7
 	 (when (and (< (get-mod-value vel-mod time) 0.2) (> (random-liminale) 0.6))
 	   (setf (note-freq new-note)
 		 (apply #'get-new-pad-frequency (mapcar #'note-freq note-list)))
@@ -69,6 +69,23 @@
 		      :freq (apply #'get-new-contemplative-frequency
 				   (mapcar #'note-freq note-list)))))))))
 
+;; *** add-noise
+;;; Given a list of currently playing noisy notes, which notes should additionally
+;;; start to play? Return additional notes as a list.
+(defun add-noise (note-list &optional (time 0))
+  (unless (every #'is-noise note-list)
+    (error "add-noise: I want only noise notes!"))
+  (let ((new-note
+	  (make-note :start time
+		     :duration (get-noise-duration)
+		     :type 'noise
+		     :velocity (random-liminale))))
+    (case (length note-list)
+      (0 (list new-note))
+      ;; TODO this probability could depend on grid-size
+      (1 (when (> (random-liminale) 0.9)
+	   (list new-note))))))
+
 ;; *** is-pad
 (defun is-pad (note)
   (equal 'pad (note-type note)))
@@ -76,6 +93,10 @@
 ;; *** is-contemplative
 (defun is-contemplative (note)
   (equal 'contemplative (note-type note)))
+
+;; *** is-noise
+(defun is-noise (note)
+  (equal 'noise (note-type note)))
 
 ;; *** get-durations
 
@@ -88,10 +109,13 @@
 (defparameter *max-duration-con-pause* 15000)
 (defparameter *min-duration-pad* 10000)
 (defparameter *max-duration-pad* 40000)
+(defparameter *min-duration-noise* 25000)
+(defparameter *max-duration-noise* 60000)
 
 ;;; Functions for duration selection follow here
 (let ((last-pad '())
-      (last-con '(500)))
+      (last-con '(500))
+      (last-noise '()))
 
   (defun reset-last-durations ()
     (setf last-pad '())
@@ -102,21 +126,34 @@
     (get-duration-aux
      last-pad #'(lambda (x) (push x last-pad))
      *min-duration-pad* *max-duration-pad*))
+
+  ;;; get a duration for the noise sounds, mostly random.
+  (defun get-noise-duration ()
+    ;; lets only have, say, 20 different options for length:
+    (let* ((nr-options 10)
+	   (len-diff (- *max-duration-noise* *min-duration-noise*))
+	   (factor (/ len-diff *liminale-grid-mseconds*
+		      (max nr-options (1+ *min-no-repetitions*)))))
+      (* (get-duration-aux
+	  last-noise #'(lambda (x) (push x last-noise))
+	  (floor *min-duration-noise* factor)
+	  (floor *max-duration-noise* factor))
+	 factor)))
   
-  ;;; get a duration for the contemplative sounds.
-  (defun get-contemplative-duration ()
-    (let* ((last-dur (car last-con))
-	   (nr-of-reps (length (loop for i in last-con while (= i last-dur)
-				     collect i))))
-      (if (>= last-dur *min-duration-con-pause*)
-	  (get-duration-aux
-	   last-con #'(lambda (x) (push x last-con))
-	   *min-duration-con* *max-duration-con*)
-	  (if (< (random-liminale) (* nr-of-reps 0.1))
-	      (get-duration-aux
-	       last-con #'(lambda (x) (push x last-con))
-	       *min-duration-con-pause* *max-duration-con-pause*)
-	      (progn (push last-dur last-con) last-dur))))))
+;;; get a duration for the contemplative sounds.
+    (defun get-contemplative-duration ()
+      (let* ((last-dur (car last-con))
+	     (nr-of-reps (length (loop for i in last-con while (= i last-dur)
+				       collect i))))
+	(if (>= last-dur *min-duration-con-pause*)
+	    (get-duration-aux
+	     last-con #'(lambda (x) (push x last-con))
+	     *min-duration-con* *max-duration-con*)
+	    (if (< (random-liminale) (* nr-of-reps 0.1))
+		(get-duration-aux
+		 last-con #'(lambda (x) (push x last-con))
+		 *min-duration-con-pause* *max-duration-con-pause*)
+		(progn (push last-dur last-con) last-dur))))))
 
 ;;; Aux-function for getting a random but original duration between min-dur
 ;;; and max-dur. last-ls is a list of durations to not chose, setter-fn should
@@ -191,6 +228,9 @@
   
   ;;; get a frequency for the contemplative sounds
   (defun get-new-contemplative-frequency (&rest freqs)
+    ;; Sorting them by #'< means that lower freqs are more important in
+    ;; #'filter-similar-options
+    (setf freqs (sort freqs #'<))
     (get-new-frequency-aux
      last-con-freqs #'(lambda (x) (push x last-con-freqs))
      freqs +con-ratios+ +min-freq+ (* 3 +max-freq+)

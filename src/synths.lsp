@@ -40,9 +40,11 @@
 	 (soundpile (if (< (random-liminale) (note-velocity note))
 			*acc-samples-double*
 			*acc-samples-basic*))
+	 (longest (first (sort (copy-seq (data soundpile)) #'>
+			       :key #'duration)))
 	 (sounds (or (find-sounds-with-sufficient-dur
 		      duration freq soundpile)
-		     (data soundpile)))
+		     (list longest)))
 	 (sound (nth-mod i sounds))
 	 (sound-freq (car (fundamental-frequency sound)))
 	 (base-srt (/ freq sound-freq))
@@ -61,7 +63,6 @@
 		   :freq-env `(0 0  0.7 4000  1 ,freq)
 		   :freq-env-expt 8))
      (clm::sine start duration freq 0.1 :amp-env amp-env))))
-
 
 ;; ** pluck
 (defun pluck (note &optional (i 0))

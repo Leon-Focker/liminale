@@ -20,40 +20,36 @@
 ;; *** add-pad-harmony
 ;;; Given a list of currently playing pad notes, which notes should additionally
 ;;; start to play? Return additional notes as a list.
-;;; TODO maybe velocity can determine sample selection?
 (defparameter *pad-velocity-period* 300) ; in seconds
 
 (let ((vel-mod (get-sine-modulator *pad-velocity-period* (* pi 1/2))))
   (defun add-pad-harmony (note-list &optional (time 0))
     (unless (every #'is-pad note-list)
       (error "get-pad-harmony: I want only pad notes!"))
-    (let (new-note)
-      (case (length note-list)
-	(0 (setf
-	    new-note
+    (let ((new-note
 	    (make-note :start time
 		       :duration (get-pad-duration)
 		       :type 'pad
-		       :velocity (get-mod-value vel-mod time)
-		       :freq (get-new-pad-frequency)))
+		       :velocity (get-mod-value vel-mod time))))
+      (case (length note-list)
+	(0
+	 (setf (note-freq new-note) (get-new-pad-frequency))
 	 (cons new-note (add-pad-harmony (list new-note) time)))
-	((1 2) (setf
-		new-note
-		(make-note :start time
-			   :duration (get-pad-duration)
-			   :type 'pad
-			   :velocity  (get-mod-value vel-mod time)
-			   :freq (apply #'get-new-pad-frequency
-					(mapcar #'note-freq note-list))))
+	((1 2) 
+	 (setf (note-freq new-note)
+	       (apply #'get-new-pad-frequency (mapcar #'note-freq note-list)))
 	 (cons new-note (add-pad-harmony (cons new-note note-list) time)))
-	(3 (when (> (random-liminale) 0.8)
-	     (list
-	      (make-note :start time
-			 :duration (get-pad-duration)
-			 :type 'pad
-			 :velocity (get-mod-value vel-mod time)
-			 :freq (apply #'get-new-pad-frequency
-				      (mapcar #'note-freq note-list))))))))))
+	(3
+	 ;; TODO this probability could depend on grid-size
+	 (when (> (random-liminale) 0.8)
+	   (setf (note-freq new-note)
+		 (apply #'get-new-pad-frequency (mapcar #'note-freq note-list)))
+	   (list new-note)))
+	(4
+	 (when (and (< (get-mod-value vel-mod time) 0.2) (> (random-liminale) 0.6))
+	   (setf (note-freq new-note)
+		 (apply #'get-new-pad-frequency (mapcar #'note-freq note-list)))
+	   (list new-note)))))))
 
 ;; *** add-contemplative
 ;;; Given a list of currently playing pad notes, add some contemplative notes.
@@ -177,7 +173,7 @@
 	  '(4 5 6 7 8 9 10 11 12 13 14 15)))
 
 (defparameter +min-freq+ 40)
-(defparameter +max-freq+ 1200)
+(defparameter +max-freq+ 600)
 
 ;;; Functions for frequency selection follow here
 (let ((last-pad-freqs '(528))
@@ -191,13 +187,13 @@
   (defun get-new-pad-frequency (&rest freqs)
     (get-new-frequency-aux
      last-pad-freqs #'(lambda (x) (push x last-pad-freqs))
-     freqs +pad-ratios+))
+     freqs +pad-ratios+ +min-freq+ +max-freq+))
   
   ;;; get a frequency for the contemplative sounds
   (defun get-new-contemplative-frequency (&rest freqs)
     (get-new-frequency-aux
      last-con-freqs #'(lambda (x) (push x last-con-freqs))
-     freqs +con-ratios+
+     freqs +con-ratios+ +min-freq+ (* 3 +max-freq+)
      #'(lambda (ls) (or (find (car last-con-freqs) ls :test #'(lambda (x y) (<= x y)))
 		   (first ls))))))
 
@@ -210,7 +206,7 @@
 ;;; - picking-fn: a list of options will be generated, sorted from lowest to
 ;;;   highest. This function will be called to select one of these frequencies.
 ;;;   If none is provided, the first is chosen.
-(defun get-new-frequency-aux (last-ls setter-fn freqs ratios
+(defun get-new-frequency-aux (last-ls setter-fn freqs ratios min-freq max-freq
 			      &optional (picking-fn #'first))
   (let ((options '())
 	(similar-options '())
@@ -220,7 +216,7 @@
     (loop for freq in freqs
 	  do (push (loop for ratio in ratios
 			 for new-freq = (* freq ratio)
-			 when (<= +min-freq+ new-freq +max-freq+)
+			 when (<= min-freq new-freq max-freq)
 			   collect new-freq)
 		   options))
     ;; filter options
@@ -264,6 +260,13 @@
     ;; some to be more 'arbitrary' -> shifting notes with fixed seed randomness.
     ;; Use something like (random (get-cut-off-sine-modulator (* 5 60))).
     note-list))
+
+;; *** playing-at-time
+(defun playing-at-time (list-of-notes time)
+  (loop for note in list-of-notes
+	for start = (note-start note)
+	for end = (+ start (note-duration note))
+	when (<= start time end) collect note))
 
 ;; ** tests
 

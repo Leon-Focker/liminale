@@ -6,9 +6,9 @@
 
 (format t "~& ~&relaxing now :3~& ~&")
 
-(wsound "sine-test" 1 (clm::simple-sine 0 1 214 0.5))
+;; (wsound "sine-test" 1 (clm::simple-sine 0 1 214 0.5))
 
-(wsound "moog-test" 2
+(wsound "liminale" 2
   (progn
     (reset-liminale)
     (loop for i from 0
@@ -22,6 +22,8 @@
 		    (t )))))
 
 (stop-playing)
+
+
 
 ;;; TODO
 ;;; - noise layer with splinter

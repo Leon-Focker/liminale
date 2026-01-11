@@ -1,33 +1,33 @@
 ;; * synths
 
-(in-package :relax)
+(in-package :liminale)
 
 ;; ** Sounds
 
-(defparameter *acc-samples*
-  (let ((text-file (relax-path "acc-samples.txt")))
+#+nil(defparameter *acc-samples*
+  (let ((text-file (liminale-path "acc-samples.txt")))
     (if (probe-file text-file)
 	(load-from-file text-file)
 	(let ((sp (soundpile-from-folder
-		   'accordion "/E/relax/acc_samples/" :analyse t)))
+		   'accordion "/E/liminale/acc_samples/" :analyse t)))
 	  (store-in-text-file sp text-file)
 	  sp))))
 
 (defparameter *acc-samples-double*
-  (let ((text-file (relax-path "acc-samples-double.txt")))
+  (let ((text-file (liminale-path "acc-samples-double.txt")))
     (if (probe-file text-file)
 	(load-from-file text-file)
 	(let ((sp (soundpile-from-folder
-		   'accordion "/E/relax/samples/double/" :analyse t)))
+		   'accordion "/E/liminale/samples/double/" :analyse t)))
 	  (store-in-text-file sp text-file)
 	  sp))))
 
 (defparameter *acc-samples-basic*
-  (let ((text-file (relax-path "acc-samples-basic.txt")))
+  (let ((text-file (liminale-path "acc-samples-basic.txt")))
     (if (probe-file text-file)
 	(load-from-file text-file)
 	(let ((sp (soundpile-from-folder
-		   'accordion "/E/relax/samples/basic/" :analyse t)))
+		   'accordion "/E/liminale/samples/basic/" :analyse t)))
 	  (store-in-text-file sp text-file)
 	  sp))))
 
@@ -37,7 +37,7 @@
   (let* ((start (/ (note-start note) 1000.0))
 	 (duration (/ (note-duration note) 1000.0))
 	 (freq (note-freq note))
-	 (soundpile (if (< (random-relax) (note-velocity note))
+	 (soundpile (if (< (random-liminale) (note-velocity note))
 			*acc-samples-double*
 			*acc-samples-basic*))
 	 (sounds (or (find-sounds-with-sufficient-dur

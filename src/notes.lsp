@@ -1,6 +1,6 @@
 ;; * notes
 
-(in-package :relax)
+(in-package :liminale)
 
 (defstruct (note
             (:constructor make-note
@@ -46,7 +46,7 @@
 			   :freq (apply #'get-new-pad-frequency
 					(mapcar #'note-freq note-list))))
 	 (cons new-note (add-pad-harmony (cons new-note note-list) time)))
-	(3 (when (> (random-relax) 0.8)
+	(3 (when (> (random-liminale) 0.8)
 	     (list
 	      (make-note :start time
 			 :duration (get-pad-duration)
@@ -84,7 +84,7 @@
 ;; *** get-durations
 
 ;;; Some (possibly user-defined) values that guide the duration-selection.
-(defparameter *relax-grid-mseconds* 100)
+(defparameter *liminale-grid-mseconds* 100)
 (defparameter *min-no-repetitions* 5)
 (defparameter *min-duration-con* 200)
 (defparameter *max-duration-con* 600)
@@ -116,7 +116,7 @@
 	  (get-duration-aux
 	   last-con #'(lambda (x) (push x last-con))
 	   *min-duration-con* *max-duration-con*)
-	  (if (< (random-relax) (* nr-of-reps 0.1))
+	  (if (< (random-liminale) (* nr-of-reps 0.1))
 	      (get-duration-aux
 	       last-con #'(lambda (x) (push x last-con))
 	       *min-duration-con-pause* *max-duration-con-pause*)
@@ -126,11 +126,11 @@
 ;;; and max-dur. last-ls is a list of durations to not chose, setter-fn should
 ;;; be a lambda-function which adds the new value to a list.
 (defun get-duration-aux (last-ls setter-fn min-dur max-dur)
-  (let ((min-mult (ceiling min-dur *relax-grid-mseconds*))
-	(max-mult (floor max-dur *relax-grid-mseconds*)))
-    (loop for random-nr = (random-nldd 0.8 (random-relax))
+  (let ((min-mult (ceiling min-dur *liminale-grid-mseconds*))
+	(max-mult (floor max-dur *liminale-grid-mseconds*)))
+    (loop for random-nr = (random-nldd 0.8 (random-liminale))
 	  for mult = (round (scale-to-log random-nr min-mult max-mult))
-	  for new-dur = (* mult *relax-grid-mseconds*)
+	  for new-dur = (* mult *liminale-grid-mseconds*)
 	  while (remove-if-not #'(lambda (x) (similar-durp x new-dur))
 			       (subseq last-ls 0 (min (length last-ls)
 						      *min-no-repetitions*)))
@@ -235,9 +235,9 @@
     (funcall setter-fn result)
     (round result)))
 
-;; *** generate-relaxing-notes
+;; *** generate-liminaleing-notes
 ;;; Generate the note material for some relaxing music, focused on long, slow,
-;;; and consonant harmony. This uses *relax-grid-mseconds* as isochronal grid-size
+;;; and consonant harmony. This uses *liminale-grid-mseconds* as isochronal grid-size
 ;;; - duration: Duration in seconds.
 (defun generate-relaxing-notes (duration)
   (setf duration (round (* 1000 duration)))
@@ -248,7 +248,7 @@
       ;; update list of active-notes
       (setf active-notes
 	    (loop for note in active-notes
-		  do (decf (note-time-left note) *relax-grid-mseconds*)
+		  do (decf (note-time-left note) *liminale-grid-mseconds*)
 		  when (> (note-time-left note) 0)
 		    collect note))
       ;; add new notes
@@ -258,7 +258,7 @@
 	(mapcar #'(lambda (note) (push note active-notes) (push note note-list))
 		(append new-pad-notes new-contemplative)))
       ;; step forward in time 
-      (incf time *relax-grid-mseconds*))
+      (incf time *liminale-grid-mseconds*))
     ;; TODO
     ;; I want some sections to have regular rhythms (for the short sounds) and
     ;; some to be more 'arbitrary' -> shifting notes with fixed seed randomness.

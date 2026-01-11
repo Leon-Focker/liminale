@@ -1,6 +1,6 @@
 ;; * modulators
 
-(in-package :relax)
+(in-package :liminale)
 
 (defstruct (modulator)
   (fn #'(lambda (time) (abs (sin time)))))	         	; fn(x) -> y

@@ -1,7 +1,7 @@
-(asdf:defsystem #:relax
-  :version "0.1"
+(asdf:defsystem #:liminale
+  :version "0.5"
   :default-component-class "cl-source-file.lsp"
-  :description "Generate music for meditation."
+  :description "Algorithmic, generative music for meditation and background listening."
   :author "Leon Focker"
   :license "GNU General Public License v3.0"
   :depends-on ()
@@ -12,6 +12,6 @@
 	       (:file "modulators")
 	       (:file "notes")
 	       (:file "synths")
-	       (:file "relax")))
+	       (:file "main")))
 
-;; EOF relax.asd
+;; EOF liminale.asd

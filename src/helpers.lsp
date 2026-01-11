@@ -1,11 +1,11 @@
 ;; * helpers.lsp
 
-(in-package :relax)
+(in-package :liminale)
 
 ;; ** reset
 
-(defun reset-relax ()
-  (reset-random-relax)
+(defun reset-liminale ()
+  (reset-random-liminale)
   (reset-last-durations)
   (reset-last-freqs))
 
@@ -14,16 +14,16 @@
 (let* ((seed 5)
        (rn (make-random-number seed)))
   
-  (defun random-relax ()
+  (defun random-liminale ()
     (get-next rn))
   
-  (defun reset-random-relax ()
+  (defun reset-random-liminale ()
     (setf rn (make-random-number seed))
-    (random-relax))
+    (random-liminale))
     
-  (defun set-relax-seed (new-seed)
+  (defun set-liminale-seed (new-seed)
     (setf seed new-seed)
-    (reset-random-relax)))
+    (reset-random-liminale)))
 
 ;; ** musical helpers
 
@@ -71,7 +71,7 @@
 
 (defmacro wsound (name out-channels &body body)
   `(with-sound (:header-type clm::mus-riff :srate 48000
-		:output (format nil "~a~a" (relax-path ,name) ".wav")
+		:output (format nil "~a~a" (liminale-path ,name) ".wav")
 		:channels ,out-channels :play t :scaled-to 0.98
 		:force-recomputation nil :statistics nil)
      ,@body))

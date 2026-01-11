@@ -1,15 +1,15 @@
 ;; * package
 
-(defpackage :relax
+(defpackage :liminale
   (:use :common-lisp :layers-utils :clm)
-  (:nicknames :rl))
+  (:nicknames :li))
 
-(in-package :relax)
+(in-package :liminale)
 
-;; get path to local files with #'relax-path
-(let ((relax-src-dir (lyu::get-pathname-dir (asdf:system-source-directory :relax))))
-  (defun relax-path (name)
-    (format nil "~a~a" relax-src-dir name)))
+;; get path to local files with #'liminale-path
+(let ((liminale-src-dir (lyu::get-pathname-dir (asdf:system-source-directory :liminale))))
+  (defun liminale-path (name)
+    (format nil "~a~a" liminale-src-dir name)))
 
 ;; same for #'clm-path
 (let ((clm-src-dir (lyu::get-pathname-dir (asdf:system-source-directory :clm))))
@@ -20,9 +20,9 @@
 
 (load (compile-file (clm-path "moog.lisp")))
 (load (compile-file (clm-path "svf.lisp")))
-(load (compile-file (relax-path "src/moog.ins")))
-(load (compile-file (relax-path "src/sine.ins")))
-(load (compile-file (relax-path "src/simple-echo.ins")))
-(load (compile-file (relax-path "src/splinter.ins")))
+(load (compile-file (liminale-path "src/moog.ins")))
+(load (compile-file (liminale-path "src/sine.ins")))
+(load (compile-file (liminale-path "src/simple-echo.ins")))
+(load (compile-file (liminale-path "src/splinter.ins")))
 
 ;; EOF package.lsp

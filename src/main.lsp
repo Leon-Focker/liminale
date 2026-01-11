@@ -1,4 +1,4 @@
-(in-package :relax)
+(in-package :liminale)
 
 ;; * relaxing...
 
@@ -10,7 +10,7 @@
 
 (wsound "moog-test" 2
   (progn
-    (reset-relax)
+    (reset-liminale)
     (loop for i from 0
 	  for note in (generate-relaxing-notes 300)
 	  collect (case (note-type note)
@@ -29,4 +29,4 @@
 
 ;;; - possibly capable of multichannel-audio generation -> Intro-Musik NA
 
-;; EOF relax.lsp
+;; EOF liminale.lsp

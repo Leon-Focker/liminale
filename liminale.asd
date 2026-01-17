@@ -12,6 +12,7 @@
 	       (:file "modulators")
 	       (:file "notes")
 	       (:file "synths")
-	       (:file "main")))
+	       ;;(:file "main")
+	       ))
 
 ;; EOF liminale.asd

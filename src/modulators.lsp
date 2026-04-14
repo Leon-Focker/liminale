@@ -3,7 +3,9 @@
 (in-package :liminale)
 
 (defstruct (modulator)
-  (fn #'(lambda (time) (abs (sin time)))))	         	; fn(x) -> y
+  (fn #'(lambda (time) (abs (sin time))))	         	; fn(x) -> y
+  (min 0.0)
+  (max 1.0))
 
 ;; *** get-modulator-value
 ;;; Time in miliseconds -> some y-value
@@ -109,6 +111,8 @@
 			   2)
 			(- 1 from-top))
 		   from-bottom)
-	      y-offset))))
+	      y-offset))
+   :min (+ from-bottom y-offset)
+   :max (+ from-top y-offset)))
 
 ;; EOF modulators.lsp

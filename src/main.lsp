@@ -8,7 +8,7 @@
 
 ;; (wsound "sine-test" 1 (clm::simple-sine 0 1 214 0.5))
 
-(wsound "liminale_long_new_rain" 2
+(wsound "liminale" 2
   (progn
     (reset-liminale)
     (loop for i from 0
@@ -28,13 +28,10 @@
 (stop-playing)
 
 
-
-;;; TODO
-;;; - dickere Harmonien wenn Pluck nicht spielt? allgemein etwas höhere cahnce auf harmonien.
-;;; - Pluck manchmal zu schief
+;;; IDEAS
 
 ;;; When sampling (for example with samp0) before passing to moog we could:
 ;;; - play samples longer by looping/reversing...?
-;;; - possibly capable of multichannel-audio generation -> Intro-Musik NA
+;;; - possibly add capability of multichannel-audio generation
 
 ;; EOF liminale.lsp

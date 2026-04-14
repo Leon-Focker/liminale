@@ -92,7 +92,10 @@
 			:type 'noise
 			:velocity vel)))
       (case (length note-list)
-	(0 (list new-note))))))
+	(0 (list new-note)))))
+  
+  (defun reset-noise ()
+    (setf last-played? t)))
 
 ;; *** is-pad
 (defun is-pad (note)
@@ -127,7 +130,8 @@
 
   (defun reset-last-durations ()
     (setf last-pad '())
-    (setf last-con '(500)))
+    (setf last-con '(500))
+    (setf last-noise '()))
 
    ;;; get a duration for the pad sounds, mostly random.
   (defun get-pad-duration ()

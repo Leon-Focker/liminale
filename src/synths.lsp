@@ -120,7 +120,7 @@
 				      :voices 10
 				      :srt 0.8
 				      :amp amp
-				      :ramp 1000
+				      :ramp 100000
 				      :silence-env '(0 1  40 0  60 0.3  100 1)
 				      :amp-env '(0 0  30 1  70 1  100 0)
 				      :amp-env-base 0.5

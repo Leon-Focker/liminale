@@ -4,14 +4,11 @@
 
 ;; ** Sounds
 
-#+nil(defparameter *acc-samples*
-  (let ((text-file (liminale-path "acc-samples.txt")))
-    (if (probe-file text-file)
-	(load-from-file text-file)
-	(let ((sp (soundpile-from-folder
-		   'accordion "/E/liminale/acc_samples/" :analyse t)))
-	  (store-in-text-file sp text-file)
-	  sp))))
+(defparameter *rain* "/E/liminale/samples/hagel.wav")
+
+(defparameter *hail* "/E/liminale/samples/regen.wav")
+
+(defparameter *noise* "/E/liminale/samples/pinknoise.wav")
 
 (defparameter *acc-samples-double*
   (let ((text-file (liminale-path "acc-samples-double.txt")))
@@ -104,13 +101,10 @@
 (defun splinter (note)
   (let* ((start (/ (note-start note) 1000.0))
 	 (duration (/ (note-duration note) 1000.0))
-	 (vel (note-velocity note))
-	 (file1 "/E/liminale/samples/hagel.wav")
-	 (file2 "/E/liminale/samples/regen.wav")
-	 (file3 "/E/liminale/samples/pinknoise.wav"))
+	 (vel (note-velocity note)))
     (clm::sound-let
 	((splint (:statistics nil)
-		 (loop for file in (list file1 file2 file3)
+		 (loop for file in (list *rain* *hail* *noise*)
 		       for amp in (list vel (- 1.0 vel) 0.05)
 		       append 
 		       (clm::splinter file 0

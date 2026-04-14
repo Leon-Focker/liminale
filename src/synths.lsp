@@ -97,7 +97,8 @@
 			  (clm::sine 0 duration (* mult freq) amp :amp-env amp-env)))))
     (clm::simple-echo moog-sound start
 		      :delay (note-delay-time note)
-		      :feedback 0.7))))
+		      :feedback 0.7
+		      :time-after 5))))
 
 ;; ** splinter
 (defun splinter (note)

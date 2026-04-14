@@ -17,17 +17,30 @@
 
 ;; ** generation
 
+(defparameter *pad-velocity-period* 300) ; in seconds
+(defparameter *contemplative-velocity-period* 500) ; in seconds
+;; global so Pads can also access it
+(defparameter *convemplative-vel-mod*
+  (get-cut-off-sine-modulator *contemplative-velocity-period* 0.2 0.5 -0.2))
+
 ;; *** add-pad-harmony
 ;;; Given a list of currently playing pad notes, which notes should additionally
 ;;; start to play? Return additional notes as a list.
-(defparameter *pad-velocity-period* 300) ; in seconds
 
 (let ((vel-mod (get-sine-modulator *pad-velocity-period* (* pi 1/2))))
   (defun add-pad-harmony (note-list &optional (time 0))
     (unless (every #'is-pad note-list)
       (error "add-pad-harmony: I want only pad notes!"))
-    (let* ((chance-per-minute-1 3)
-	   (chance-per-minute-2 0.6)
+    (let* ((con-vel-mod (get-mod-value *convemplative-vel-mod* time))
+	   (con-vel-mod-normalized
+	     (rescale con-vel-mod
+		      (modulator-min *convemplative-vel-mod*)
+		      (modulator-max *convemplative-vel-mod*)
+		      0.0
+		      1.0))
+	   (multiplier-from-con-vel-mod (1+ (* -1 5 con-vel-mod-normalized)))
+	   (chance-per-minute-1 (* 3 multiplier-from-con-vel-mod))
+	   (chance-per-minute-2 (* 0.6 multiplier-from-con-vel-mod))
 	   (checks-per-minute (/ 1 (/ *liminale-grid-mseconds* 1000 60)))
 	   (chance-per-check-1 (/ chance-per-minute-1 checks-per-minute))
 	   (chance-per-check-2 (/ chance-per-minute-2 checks-per-minute))
@@ -58,21 +71,19 @@
 
 ;; *** add-contemplative
 ;;; Given a list of currently playing pad notes, add some contemplative notes.
-(defparameter *conteplative-velocity-period* 400) ; in seconds
-
-(let ((vel-mod (get-cut-off-sine-modulator *conteplative-velocity-period* 0.2 0.5 -0.2)))
-  (defun add-contemplative (note-list &optional (time 0))
-    (let ((contemplative-notes (remove-if-not #'is-contemplative note-list)))
-      (when (null contemplative-notes)
-	(let ((duration (get-contemplative-duration)))
-	  (list
-	   (make-note :start time
-		      :duration duration
-		      :type 'contemplative
-		      :velocity (* (get-mod-value vel-mod time) 2.5) ; between 0.0 and 0.5
-		      :delay-time (scale-until-in-range (/ duration 1000) 0.2 0.45 3)
-		      :freq (apply #'get-new-contemplative-frequency
-				   (mapcar #'note-freq note-list)))))))))
+(defun add-contemplative (note-list &optional (time 0))
+  (let ((contemplative-notes (remove-if-not #'is-contemplative note-list)))
+    (when (null contemplative-notes)
+      (let ((duration (get-contemplative-duration)))
+	(list
+	 (make-note :start time
+		    :duration duration
+		    :type 'contemplative
+		    ;; between 0.0 and 0.75
+		    :velocity (* (get-mod-value *convemplative-vel-mod* time) 2.5) 
+		    :delay-time (scale-until-in-range (/ duration 1000) 0.2 0.45 3)
+		    :freq (apply #'get-new-contemplative-frequency
+				 (mapcar #'note-freq note-list))))))))
 
 ;; *** add-noise
 ;;; Given a list of currently playing noisy notes, which notes should additionally
@@ -115,7 +126,7 @@
 (defparameter *liminale-grid-mseconds* 100)
 (defparameter *min-no-repetitions* 5)
 (defparameter *min-duration-con* 200)
-(defparameter *max-duration-con* 600)
+(defparameter *max-duration-con* 1000)
 (defparameter *min-duration-con-pause* 5000)
 (defparameter *max-duration-con-pause* 25000)
 (defparameter *min-duration-pad* 10000)
@@ -217,7 +228,6 @@
 	 (subseq last-freqs 0 (1- (length last-freqs)))))))
 
 ;; *** get-new-frequency
-;;; TODO make these constants later
 (defparameter +pad-ratios+
   (append '(1/2 2/3 3/4)		; 4/5 5/6 6/7 7/8)
 	  '(2 3/2 4/3 5/4)		; 6/5 7/6 8/7)
@@ -226,11 +236,11 @@
 	  '(4 5)))
 
 (defparameter +con-ratios+
-  (append '(1 4/3 3/2 8/5 5/3 12/7 7/4)
-	  '(2 3/2 4/3 5/4 6/5 7/6 8/7)
-	  '(3 2 5/3 3/2 7/5 4/3 9/7)
-	  '(2/3 1 6/5 4/3 10/7 3/2 14/9)
-	  '(4 5 6 7 8 9 10 11 12 13 14 15)))
+  (append '(1 4/3 3/2 8/5 5/3 7/4)      ; 12/7
+	  '(2 3/2 4/3 5/4 6/5 7/6 8/7)  ;
+	  '(3 2 5/3 3/2 7/5 4/3 9/7)    ;
+	  '(2/3 1 6/5 4/3 3/2 14/9)     ; 10/7
+	  '(4 5 6 7 8 9 10 11 12 13 14 15)))   ;
 
 (defparameter +min-freq+ 40)
 (defparameter +max-freq+ 600)

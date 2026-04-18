@@ -63,7 +63,7 @@
 
 ;; ** pluck
 (defun pluck (note &optional (i 0))
-  (let* ((amp (/ (note-velocity note) 4))
+  (let* ((amp (/ (note-velocity note) 5))
 	 (start (/ (note-start note) 1000.0))
 	 (duration 0.5)
 	 (freq (note-freq note))
@@ -98,6 +98,7 @@
 		      :time-after 5))))
 
 ;; ** splinter
+;;; granular rain and pink noise
 (defun splinter (note)
   (let* ((start (/ (note-start note) 1000.0))
 	 (duration (/ (note-duration note) 1000.0))
@@ -121,7 +122,7 @@
 				      :amp-env-base 0.5
 				      ))))
       (clm::moog splint start
-		 :amp (+ 0.1 (* 0.2 vel))
+		 :amp (+ 0.1 (* 0.4 vel))
 					; :amp-env amp-env
 		 :moog t
 		 :duration duration

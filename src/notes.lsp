@@ -126,12 +126,12 @@
 ;;; Some (possibly user-defined) values that guide the duration-selection.
 (defparameter *liminale-grid-mseconds* 100)
 (defparameter *min-no-repetitions* 5)
-(defparameter *min-duration-con* 200)
-(defparameter *max-duration-con* 1000)
+(defparameter *min-duration-con* 400)
+(defparameter *max-duration-con* 2000)
 (defparameter *min-duration-con-pause* 5000)
 (defparameter *max-duration-con-pause* 25000)
 (defparameter *min-duration-pad* 10000)
-(defparameter *max-duration-pad* 40000)
+(defparameter *max-duration-pad* 65000)
 (defparameter *min-duration-noise* 120000)
 (defparameter *max-duration-noise* 300000)
 
@@ -230,21 +230,42 @@
 
 ;; *** get-new-frequency
 (defparameter +pad-ratios+
-  (append '(1/2 2/3 3/4)		; 4/5 5/6 6/7 7/8)
-	  '(2 3/2 4/3 5/4)		; 6/5 7/6 8/7)
-	  '(3 2 5/3 3/2)		; 7/5 4/3 9/7)
-	  '(1/3 1/2 3/5 2/3)		; 5/7 3/4 7/9)
-	  '(4 5)))
+  (append
+   ;; start with ratios > 1
+   '(2 3 4 5 6 7 8 9 10)
+   '(3/2 4/3 5/4 6/5 7/6 8/7)
+   '(5/3 6/4) ; maybe 9/7?
+   '(5/2 7/4 8/5)
+   '(7/3 9/5)
+   '(7/2 8/3 9/4)
+   ;; now < 1
+   '(1/2 1/3 1/4 1/5 1/6 1/7 1/8 1/9 1/10)
+   '(2/3 3/4 4/5 5/6)
+   '(3/5)
+   '(2/5 5/8)
+   '(3/7 5/9)
+   '(2/7 3/8 4/9)))
 
 (defparameter +con-ratios+
-  (append '(1 4/3 3/2 8/5 5/3 7/4)      ; 12/7
-	  '(2 3/2 4/3 5/4 6/5 7/6 8/7)  ;
-	  '(3 2 5/3 3/2 7/5 4/3 9/7)    ;
-	  '(2/3 1 6/5 4/3 3/2 14/9)     ; 10/7
-	  '(4 5 6 7 8 9 10 11 12 13 14 15)))   ;
+  (append
+   ;; start with ratios > 1
+   '(2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21)
+   '(3/2 4/3 5/4 6/5 7/6 8/7)
+   '(5/3 6/4) ; maybe 9/7?
+   '(5/2 7/4 8/5)
+   '(7/3 9/5)
+   '(7/2 8/3 9/4)
+   ;; now < 1
+   ;; '(1/2 1/3 1/4 1/5 1/6 1/7 1/8 1/9 1/10)
+   ;; '(2/3 3/4 4/5 5/6)
+   ;; '(3/5)
+   ;; '(2/5 5/8)
+   ;; '(3/7 5/9)
+   ;; '(2/7 3/8 4/9)
+   ))
 
-(defparameter +min-freq+ 50)
-(defparameter +max-freq+ 600)
+(defparameter +min-freq+ 55)
+(defparameter +max-freq+ 1234)
 
 ;;; Functions for frequency selection follow here
 (let ((last-pad-freqs '(528))
@@ -267,7 +288,7 @@
     (setf freqs (sort freqs #'>))
     (get-new-frequency-aux
      last-con-freqs #'(lambda (x) (push x last-con-freqs))
-     freqs +con-ratios+ +min-freq+ (* 3 +max-freq+)
+     freqs +con-ratios+ (* 2 +min-freq+) (* 2 +max-freq+)
      #'(lambda (ls) (or (find (car last-con-freqs) ls :test #'(lambda (x y) (<= x y)))
 		   (first ls))))))
 

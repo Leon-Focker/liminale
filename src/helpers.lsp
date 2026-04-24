@@ -73,8 +73,22 @@
 (defmacro wsound (name out-channels &body body)
   `(with-sound (:header-type clm::mus-riff :srate 48000
 		:output (format nil "~a~a" (liminale-path ,name) ".wav")
-		:channels ,out-channels :play t :scaled-to 0.98
+		:channels ,out-channels :play nil :scaled-to 0.98
 		:force-recomputation nil :statistics nil)
      ,@body))
+
+;; additionally convert the .wav file to .mp3 using ffmpeg in the terminal
+(defmacro wsoundmp3 (name out-channels &body body)
+  `(let ((outwav (format nil "~a~a" (liminale-path ,name) ".wav"))
+	 (outmp3 (format nil "~a~a" (liminale-path ,name) ".mp3")))
+     (with-sound (:header-type clm::mus-riff :srate 48000
+		  :output outwav
+		  :channels ,out-channels :play nil :scaled-to 0.98
+		  :force-recomputation nil :statistics nil)
+       ,@body)
+     #+unix(cl-user::run-program
+	    "/usr/bin/ffmpeg"
+	    (list "-i" outwav "-y" outmp3)
+	    :output ,*standard-output*)))
 
 ;; EOF helpers.lsp

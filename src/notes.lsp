@@ -17,12 +17,6 @@
 
 ;; ** generation
 
-(defparameter *pad-velocity-period* 300) ; in seconds
-(defparameter *contemplative-velocity-period* 500) ; in seconds
-;; global so Pads can also access it
-(defparameter *convemplative-vel-mod*
-  (get-cut-off-sine-modulator *contemplative-velocity-period* 0.2 0.5 -0.2))
-
 ;; *** add-pad-harmony
 ;;; Given a list of currently playing pad notes, which notes should additionally
 ;;; start to play? Return additional notes as a list.
@@ -31,11 +25,11 @@
   (defun add-pad-harmony (note-list &optional (time 0))
     (unless (every #'is-pad note-list)
       (error "add-pad-harmony: I want only pad notes!"))
-    (let* ((con-vel-mod (get-mod-value *convemplative-vel-mod* time))
+    (let* ((con-vel-mod (get-mod-value *contemplative-vel-mod* time))
 	   (con-vel-mod-normalized
 	     (rescale con-vel-mod
-		      (modulator-min *convemplative-vel-mod*)
-		      (modulator-max *convemplative-vel-mod*)
+		      (modulator-min *contemplative-vel-mod*)
+		      (modulator-max *contemplative-vel-mod*)
 		      0.0
 		      1.0))
 	   (multiplier-from-con-vel-mod (1+ (* -1 5 con-vel-mod-normalized)))
@@ -80,7 +74,7 @@
 		    :duration duration
 		    :type 'contemplative
 		    ;; between 0.0 and 0.75
-		    :velocity (* (get-mod-value *convemplative-vel-mod* time) 2.5) 
+		    :velocity (* (get-mod-value *contemplative-vel-mod* time) 2.5) 
 		    :delay-time (scale-until-in-range (/ duration 1000) 0.2 0.45 3)
 		    :freq (apply #'get-new-contemplative-frequency
 				 (mapcar #'note-freq note-list))))))))
@@ -122,18 +116,6 @@
   (equal 'noise (note-type note)))
 
 ;; *** get-durations
-
-;;; Some (possibly user-defined) values that guide the duration-selection.
-(defparameter *liminale-grid-mseconds* 100)
-(defparameter *min-no-repetitions* 5)
-(defparameter *min-duration-con* 400)
-(defparameter *max-duration-con* 2000)
-(defparameter *min-duration-con-pause* 5000)
-(defparameter *max-duration-con-pause* 25000)
-(defparameter *min-duration-pad* 10000)
-(defparameter *max-duration-pad* 65000)
-(defparameter *min-duration-noise* 120000)
-(defparameter *max-duration-noise* 300000)
 
 ;;; Functions for duration selection follow here
 (let ((last-pad '())
@@ -229,43 +211,6 @@
 	 (subseq last-freqs 0 (1- (length last-freqs)))))))
 
 ;; *** get-new-frequency
-(defparameter +pad-ratios+
-  (append
-   ;; start with ratios > 1
-   '(2 3 4 5 6 7 8 9 10)
-   '(3/2 4/3 5/4 6/5 7/6 8/7)
-   '(5/3 6/4) ; maybe 9/7?
-   '(5/2 7/4 8/5)
-   '(7/3 9/5)
-   '(7/2 8/3 9/4)
-   ;; now < 1
-   '(1/2 1/3 1/4 1/5 1/6 1/7 1/8 1/9 1/10)
-   '(2/3 3/4 4/5 5/6)
-   '(3/5)
-   '(2/5 5/8)
-   '(3/7 5/9)
-   '(2/7 3/8 4/9)))
-
-(defparameter +con-ratios+
-  (append
-   ;; start with ratios > 1
-   '(2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21)
-   '(3/2 4/3 5/4 6/5 7/6 8/7)
-   '(5/3 6/4) ; maybe 9/7?
-   '(5/2 7/4 8/5)
-   '(7/3 9/5)
-   '(7/2 8/3 9/4)
-   ;; now < 1
-   ;; '(1/2 1/3 1/4 1/5 1/6 1/7 1/8 1/9 1/10)
-   ;; '(2/3 3/4 4/5 5/6)
-   ;; '(3/5)
-   ;; '(2/5 5/8)
-   ;; '(3/7 5/9)
-   ;; '(2/7 3/8 4/9)
-   ))
-
-(defparameter +min-freq+ 55)
-(defparameter +max-freq+ 1234)
 
 ;;; Functions for frequency selection follow here
 (let ((last-pad-freqs '(528))
@@ -283,7 +228,7 @@
   (defun get-new-pad-frequency (&rest freqs)
     (get-new-frequency-aux
      last-pad-freqs #'(lambda (x) (push x last-pad-freqs))
-     freqs +pad-ratios+ +min-freq+ +max-freq+
+     freqs *pad-ratios* *min-freq* *max-freq*
      #'(lambda (ls) (prefer-first-options (sort ls #'pad-priority-comp)))))
   
   ;;; get a frequency for the contemplative sounds
@@ -293,7 +238,7 @@
     (setf freqs (sort freqs #'>))
     (get-new-frequency-aux
      last-con-freqs #'(lambda (x) (push x last-con-freqs))
-     freqs +con-ratios+ (* 2 +min-freq+) (* 2 +max-freq+)
+     freqs *con-ratios* (* 2 *min-freq*) (* 2 *max-freq*)
      #'(lambda (ls) (or (find (car last-con-freqs) ls :test #'(lambda (x y) (<= x y)))
 		   (first ls))))))
 
@@ -331,11 +276,12 @@
     (funcall setter-fn result)
     (round result)))
 
-;; *** generate-liminaleing-notes
+;; *** generate-relaxing-notes
 ;;; Generate the note material for some relaxing music, focused on long, slow,
 ;;; and consonant harmony. This uses *liminale-grid-mseconds* as isochronal grid-size
 ;;; - duration: Duration in seconds.
-(defun generate-relaxing-notes (duration)
+(defun generate-relaxing-notes (duration &optional (reset-liminale t))
+  (when reset-liminale (reset-liminale))
   (setf duration (round (* 1000 duration)))
   (let ((time 0)
 	(note-list '())
@@ -365,22 +311,27 @@
     note-list))
 
 ;; *** playing-at-time
+;;; time in ms
 (defun playing-at-time (list-of-notes time)
   (loop for note in list-of-notes
 	for start = (note-start note)
 	for end = (+ start (note-duration note))
 	when (<= start time end) collect note))
 
+
 ;; ** tests
 
+;; *** test-note-list
 (defun test-note-list (note-list &optional (fn-name "test-note-list"))
   (unless (listp note-list)
     (error "~a: note-list not a list!" fn-name))
   (unless (loop for note in note-list always (equal 'note (type-of note)))
     (error "~a: not all elements are notes!" fn-name)))
 
+
 ;; ** midi
 
+;; *** notes-to-midi
 (defun notes-to-midi (note-list file)
   (test-note-list note-list "notes-to-midi")
   (let ((pitches '())
@@ -395,5 +346,6 @@
     (lists-to-midi pitches durs starts
 		   :velocity-list velos
 		   :file file)))
+
 
 ;; EOF notes.lsp

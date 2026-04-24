@@ -10,6 +10,7 @@
   :components ((:file "package")
 	       (:file "helpers")
 	       (:file "modulators")
+	       (:file "parameters")
 	       (:file "notes")
 	       (:file "synths")
 	       ;;(:file "main")

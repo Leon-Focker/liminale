@@ -36,6 +36,7 @@
           (amp 1.0)
           (srt 1.0)
           (start 0.0)
+          (ping-pong nil)
           (printing t)
           (input-amp-scaler 1.0)
           (moog t)
@@ -54,6 +55,7 @@
           (res-env '(0 0 1 0))) ;; Q
   (let* ((st (floor (* time *srate*)))
          (start-sample (floor (* *srate* start)))
+	 (ping-pong-end-sample (floor (sound-framples file)))
          (stereo-input (= 2 (sound-chans file)))
          (fA (open-input* file :start start-sample))
          (fB (when stereo-input 
@@ -86,14 +88,9 @@
          (fini 0)
          ;; so we start in the ramp down portion
          (fouti foutsamps)
-         (do-src (/= srt 1.0))
-         (inputA (if do-src
-                     (make-src :input fA :srate srt)
-                     (make-readin :file fA)))
+         (inputA (make-src :input fA :srate srt))
          (inputB (when stereo-input 
-                   (if do-src
-                       (make-src :input fB :srate srt)
-                       (make-readin :file fB :channel 1))))
+                   (make-src :input fB :srate srt)))
          (count 0)
          (amp-val 0.0)
          (qval 0.0)
@@ -103,19 +100,33 @@
          (fval 0.0)
          (hpfval 0.0)
          (nd (+ st (floor (* *srate* dur))))
-         (foutbeg (1+ (- nd foutsamps))))
+         (foutbeg (1+ (- nd foutsamps)))
+	 (ml 0)
+	 (has-reversed nil))
     (run
      (loop for i from st to nd do
           (when printing (setf count (if (= count *srate*) 1 (+ count 1)))
                 (when (= count *srate*)
                   (clm-print t "~&~asecs" (round (/ i *srate*)))))
+	  ;; get the current ml (only for A, they should be in sync)
+          (setf ml (mus-location inputA))
+	  ;; if we're past the last input sample start going backwards.
+	  (when (and ping-pong (>= ml ping-pong-end-sample))
+	    (setf srt (- srt) has-reversed t) 
+            (setf (mus-increment inputA) srt)
+	    (when stereo-input (setf (mus-increment inputB) srt)))
+	  ;; similarly, if we're before the first input sample, start going
+	  ;; forwards.
+          (when (and ping-pong has-reversed (<= ml st))
+	    (setf srt (- srt))
+            (setf (mus-increment inputA) srt)
+	    (when stereo-input (setf (mus-increment inputB) srt)))
+	  ;; get sample and apply filter
           (setf qval (env qenv)
                 fval (env fenv)
                 amp-val (env ampf)
                 outa-val (* input-amp-scaler
-                            (if do-src
-                                (src inputA)
-                                (readin inputA))))
+                            (src inputA)))
           (when moog
             (setf (moog-Q mfA) qval
                   (moog-Q mfB) qval
@@ -123,9 +134,7 @@
                   (moog-frequency mfB) fval
                   outa-val (moog-filter mfA outa-val saturate)))
           (when stereo-input
-            (setf outb-val (* input-amp-scaler (if do-src
-                                                   (src inputB)
-                                                   (readin inputB))))
+            (setf outb-val (* input-amp-scaler (src inputB)))
             (when moog
               (setf outb-val (moog-filter mfB outb-val saturate))))
           (when hipass

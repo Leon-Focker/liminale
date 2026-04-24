@@ -214,15 +214,14 @@
 
 ;;; Functions for frequency selection follow here
 (let ((last-pad-freqs '(528))
-      (last-con-freqs '(528))
-      (center-freq-pads 285))
+      (last-con-freqs '(528)))
 
   (defun reset-last-freqs ()
     (setf last-pad-freqs '(528))
     (setf last-con-freqs '(528)))
 
   (defun pad-priority-comp (x y)
-    (< (abs (- center-freq-pads x)) (abs (- center-freq-pads y))))
+    (< (abs (- *center-freq-pads* x)) (abs (- *center-freq-pads* y))))
   
   ;;; get a frequency for the pad sounds 
   (defun get-new-pad-frequency (&rest freqs)

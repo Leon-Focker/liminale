@@ -1,5 +1,7 @@
 ;; * parameters
 
+(in-package :liminale)
+
 ;; ** Duration
 
 (defparameter *liminale-grid-mseconds* 100)
@@ -18,6 +20,7 @@
 
 (defparameter *min-freq* 55)
 (defparameter *max-freq* 1234)
+(defparameter *center-freq-pads* 285)
 
 (defparameter *pad-ratios*
   (append

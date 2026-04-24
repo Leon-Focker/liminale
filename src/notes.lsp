@@ -98,7 +98,8 @@
 		    (progn (setf last-played? t)
 			   (random-liminale))))
 	   (new-note
-	     (make-note :start time
+	     (make-note :freq 0
+			:start time
 			:duration (get-noise-duration)
 			:type 'noise
 			:velocity vel)))
@@ -323,8 +324,9 @@
       ;; add new notes
       (let* ((active-pad-notes (remove-if-not #'is-pad active-notes))
 	     (active-noise-notes (remove-if-not #'is-noise active-notes))
+	     (active-not-noise-notes (remove-if #'is-noise active-notes))
 	     (new-pad-notes (add-pad-harmony active-pad-notes time))
-	     (new-contemplative (add-contemplative active-notes time))
+	     (new-contemplative (add-contemplative active-not-noise-notes time))
 	     (new-noise-notes (add-noise active-noise-notes time)))
 	(mapcar #'(lambda (note) (push note active-notes) (push note note-list))
 		(append new-pad-notes new-contemplative new-noise-notes)))

@@ -269,17 +269,22 @@
 
 ;;; Functions for frequency selection follow here
 (let ((last-pad-freqs '(528))
-      (last-con-freqs '(528)))
+      (last-con-freqs '(528))
+      (center-freq-pads 285))
 
   (defun reset-last-freqs ()
     (setf last-pad-freqs '(528))
     (setf last-con-freqs '(528)))
+
+  (defun pad-priority-comp (x y)
+    (< (abs (- center-freq-pads x)) (abs (- center-freq-pads y))))
   
   ;;; get a frequency for the pad sounds 
   (defun get-new-pad-frequency (&rest freqs)
     (get-new-frequency-aux
      last-pad-freqs #'(lambda (x) (push x last-pad-freqs))
-     freqs +pad-ratios+ +min-freq+ +max-freq+))
+     freqs +pad-ratios+ +min-freq+ +max-freq+
+     #'(lambda (ls) (prefer-first-options (sort ls #'pad-priority-comp)))))
   
   ;;; get a frequency for the contemplative sounds
   (defun get-new-contemplative-frequency (&rest freqs)
@@ -322,7 +327,7 @@
 	   similar-options
 	   (subseq last-ls 0 (min (length last-ls) *min-no-repetitions*))))
     ;; pick one
-    (setf result (funcall picking-fn (sort similar-options #'<)))
+    (setf result (funcall picking-fn similar-options))
     (funcall setter-fn result)
     (round result)))
 

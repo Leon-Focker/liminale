@@ -60,6 +60,11 @@
 	  (scale-until-in-range (/ value factor) min max)
 	  (scale-until-in-range (* value factor) min max))))
 
+;; *** prefer-first-options
+(defun prefer-first-options (ls)
+  (let ((weights (reverse (loop for i from 1 repeat (length ls) collect i))))
+    (nth (decider (random-liminale) weights) ls)))
+
 ;; *** find-sounds-with-sufficient-dur
 ;;; Find sounds in a soundpile that are long enough to be played at freq for dur
 (defun find-sounds-with-sufficient-dur (dur freq soundpile)

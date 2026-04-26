@@ -274,11 +274,12 @@
     (unless freqs (push (car last-ls) freqs))
     ;; calculate freqs from ratios for each input-freq
     (loop for freq in freqs
-	  do (push (loop for ratio in ratios
-			 for new-freq = (* freq ratio)
-			 when (<= min-freq new-freq max-freq)
-			   collect new-freq)
-		   options))
+	  for derivatives
+	    = (loop for ratio in ratios
+		    for new-freq = (* freq ratio)
+		    when (<= min-freq new-freq max-freq)
+		      collect new-freq)
+	  when derivatives do (push derivatives options))
     ;; filter options
     (setf similar-options (filter-similar-options options))
     ;; try and pick the most original frequency

@@ -68,7 +68,7 @@
 
 ;; ** pluck
 (defun pluck (note &optional (i 0))
-  (let* ((amp (/ (note-velocity note) 10))
+  (let* ((amp (/ (note-velocity note) 15))
 	 (start (/ (note-start note) 1000.0))
 	 (duration 0.5)
 	 (freq (note-freq note))
@@ -107,7 +107,7 @@
 (defun splinter (note)
   (let* ((start (/ (note-start note) 1000.0))
 	 (duration (/ (note-duration note) 1000.0))
-	 (vel (/ (note-velocity note) 2)))
+	 (vel (note-velocity note)))
     (clm::sound-let
 	((splint (:statistics nil)
 		 (loop for file in (list *rain* *hail* *noise*)
@@ -127,7 +127,7 @@
 				      :amp-env-base 0.5
 				      ))))
       (clm::moog splint start
-		 :amp (+ 0.1 (* 0.4 vel))
+		 :amp (* 1.5 (+ 0.1 (* 0.4 vel)))
 					; :amp-env amp-env
 		 :moog t
 		 :duration duration

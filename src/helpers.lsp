@@ -7,8 +7,7 @@
 (defun reset-liminale ()
   (reset-random-liminale)
   (reset-last-durations)
-  (reset-last-freqs)
-  (reset-noise))
+  (reset-last-freqs))
 
 ;; ** randomness
 
@@ -26,7 +25,48 @@
     (setf seed new-seed)
     (reset-random-liminale)))
 
+
+;; ** simple ringbuffer
+
+(defstruct (simple-ringbuffer
+	    (:constructor make-simple-ringbuffer
+		(size
+		 &key init-element
+		 &aux (data (make-array size :initial-element init-element)))))
+  (data)
+  (size 1 :type integer)
+  (idx 0 :type integer))
+
+;; *** srb-get-all
+;;; get all values in the ringbuffer, starting with the most recent one
+(defun srb-get-all (srb)
+  (loop for idx from (1+ (simple-ringbuffer-idx srb))
+	repeat (simple-ringbuffer-size srb)
+	collect (aref (simple-ringbuffer-data srb)
+		      (mod idx (simple-ringbuffer-size srb)))))
+
+(defun srb-add-value (srb value)
+  (setf (aref (simple-ringbuffer-data srb) (simple-ringbuffer-idx srb))
+	value
+	(simple-ringbuffer-idx srb)
+	(mod (1+ (simple-ringbuffer-idx srb)) (simple-ringbuffer-size srb))))
+
+(let ((test (make-simple-ringbuffer 4)))
+  (srb-add-value test 8)
+  (srb-add-value test 9)
+  (srb-add-value test 10)
+  (srb-add-value test 11)
+  (srb-add-value test 12)
+  (srb-get-all test))
+
+
 ;; ** musical helpers
+
+;; *** first-n
+;;; subseq without out of bounds
+(defun first-n (sequence n)
+  (let ((len (length sequence)))
+    (subseq sequence 0 (min len n))))
 
 ;; *** similar-freqp
 ;;; check whether two frequencies are similar; two frequencies are considered
@@ -65,6 +105,35 @@
   (let ((weights (reverse (loop for i from 1 repeat (length ls) collect i))))
     (nth (decider (random-liminale) weights) ls)))
 
+;; *** filter-similar-options
+;;; Get a list of lists of options and find options, that appear in as many of
+;;; those lists as possible. The Latter options-lists are prefered, the earlier
+;;; ones discarded first.
+(defun filter-similar-options (options-lists)
+  (when options-lists
+    (let ((result '()))
+      (loop for freq in (car options-lists)
+	    when (every #'(lambda (ls) (member freq ls :test #'similar-freqp))
+			options-lists)
+	      do (push freq result))
+      (or result (filter-similar-options (cdr options-lists))))))
+
+;; *** pick-original-options
+;;; Given a list of last picks, try and find options that haven't recently been
+;;; picked.
+(defun pick-original-options (options last-picks
+			      &optional (test #'similar-freqp))
+  (unless options
+    (error "pick-original-option: no options!"))
+  (let ((result '()))
+    (loop for freq in options
+	  unless (member freq last-picks :test test)
+	    do (push freq result))
+    (or result
+	(pick-original-options
+	 options
+	 (subseq last-picks 0 (1- (length last-picks)))))))
+
 ;; *** find-sounds-with-sufficient-dur
 ;;; Find sounds in a soundpile that are long enough to be played at freq for dur
 (defun find-sounds-with-sufficient-dur (dur freq soundpile)
@@ -72,6 +141,7 @@
 	for sound-dur = (duration sound)
 	for required-dur = (* (/ freq (car (fundamental-frequency sound))) dur)
 	when (>= sound-dur required-dur) collect sound))
+
 
 ;; ** CLM
 

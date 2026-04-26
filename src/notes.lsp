@@ -17,315 +17,100 @@
 
 ;; ** generation
 
-;; *** add-pad-harmony
-;;; Given a list of currently playing pad notes, which notes should additionally
-;;; start to play? Return additional notes as a list.
-(let ((vel-mod (get-sine-modulator *pad-velocity-period* (* pi 1/2))))
-  (defun add-pad-harmony (note-list &optional (time 0))
-    (when *verbose* (format t "~&add-pad-harmony"))
-    (unless (every #'is-pad note-list)
-      (error "add-pad-harmony: I want only pad notes!"))
-    (let* ((con-vel-mod (get-mod-value *contemplative-vel-mod* time))
-	   (con-vel-mod-normalized
-	     (rescale con-vel-mod
-		      (modulator-min *contemplative-vel-mod*)
-		      (modulator-max *contemplative-vel-mod*)
-		      0.0
-		      1.0))
-	   (multiplier-from-con-vel-mod (1+ (* -1 5 con-vel-mod-normalized)))
-	   (chance-per-minute-1 (* 3 multiplier-from-con-vel-mod))
-	   (chance-per-minute-2 (* 0.6 multiplier-from-con-vel-mod))
-	   (checks-per-minute (/ 1 (/ *liminale-grid-mseconds* 1000 60)))
-	   (chance-per-check-1 (/ chance-per-minute-1 checks-per-minute))
-	   (chance-per-check-2 (/ chance-per-minute-2 checks-per-minute))
-	   (new-note
-	     (make-note :start time
-			:duration (get-pad-duration)
-			:type 'pad
-			:velocity (get-mod-value vel-mod time))))
-      (case (length note-list)
-	(0
-	 (setf (note-freq new-note) (get-new-pad-frequency))
-	 (cons new-note (add-pad-harmony (list new-note) time)))
-	((1 2)
-	 (setf (note-freq new-note)
-	       (apply #'get-new-pad-frequency (mapcar #'note-freq note-list)))
-	 (cons new-note (add-pad-harmony (cons new-note note-list) time)))
-	((3 4 5)
-	 (when (<= (random-liminale) chance-per-check-1)
-	   (setf (note-freq new-note)
-		 (apply #'get-new-pad-frequency (mapcar #'note-freq note-list)))
-	   (list new-note)))
-	((6 7)
-	 (when (and (< (get-mod-value vel-mod time) 0.2)
-		    (<= (random-liminale) chance-per-check-2))
-	   (setf (note-freq new-note)
-		 (apply #'get-new-pad-frequency (mapcar #'note-freq note-list)))
-	   (list new-note)))))))
+(defparameter *liminale-grid-mseconds* 100)
 
-;; *** add-contemplative
-;;; Given a list of currently playing pad notes, add some contemplative notes.
-(defun add-contemplative (note-list &optional (time 0))
-  (when *verbose* (format t "~&add-contemplative"))
-  (let ((contemplative-notes (remove-if-not #'is-contemplative note-list))
-	(important-notes
-	  (remove-if
-	   #'(lambda (x) (< (- (note-duration x) (note-time-left x)) 6))
-	   note-list)))
-    (when (null contemplative-notes)
-      (let ((duration (get-contemplative-duration)))
-	(list
-	 (make-note :start time
-		    :duration duration
-		    :type 'contemplative
-		    ;; between 0.0 and 0.75
-		    :velocity (* (get-mod-value *contemplative-vel-mod* time) 2.5) 
-		    :delay-time (scale-until-in-range (/ duration 1000) 0.2 0.45 3)
-		    :freq (apply #'get-new-contemplative-frequency
-				 (mapcar #'note-freq important-notes))))))))
-
-;; *** add-noise
-;;; Given a list of currently playing noisy notes, which notes should additionally
-;;; start to play? Return additional notes as a list.
-(let ((last-played? t))
-  (defun add-noise (note-list &optional (time 0))
-    (unless (every #'is-noise note-list)
-      (error "add-noise: I want only noise notes!"))
-    (let* ((vel (if last-played?
-		    (progn (setf last-played? nil)
-			   0.0)
-		    (progn (setf last-played? t)
-			   (random-liminale))))
-	   (new-note
-	     (make-note :freq 0
-			:start time
-			:duration (get-noise-duration)
-			:type 'noise
-			:velocity vel)))
-      (case (length note-list)
-	(0 (list new-note)))))
-  
-  (defun reset-noise ()
-    (setf last-played? t)))
-
-;; *** is-pad
-(defun is-pad (note)
-  (equal 'pad (note-type note)))
-
-;; *** is-contemplative
-(defun is-contemplative (note)
-  (equal 'contemplative (note-type note)))
-
-;; *** is-noise
-(defun is-noise (note)
-  (equal 'noise (note-type note)))
-
-;; *** get-durations
-
-;;; Functions for duration selection follow here
-(let ((last-pad '())
-      (last-con '(500))
-      (last-noise '()))
-
-  (defun reset-last-durations ()
-    (setf last-pad '())
-    (setf last-con '(500))
-    (setf last-noise '()))
- 
-  ;;; get a duration for the pad sounds, mostly random.
-  (defun get-pad-duration ()
-    (when *verbose* (format t "~&get-pad-duration"))
-    (get-duration-aux
-     last-pad #'(lambda (x) (push x last-pad))
-     *min-duration-pad* *max-duration-pad*))
-
-  ;;; get a duration for the noise sounds, mostly random.
-  (defun get-noise-duration ()
-    (when *verbose* (format t "~&get-noise-duration"))
-    ;; lets only have, say, 20 different options for length:
-    (let* ((nr-options 10)
-	   (len-diff (- *max-duration-noise* *min-duration-noise*))
-	   (factor (/ len-diff *liminale-grid-mseconds*
-		      (max nr-options (+ 3 *min-no-repetitions*)))))
-      (round
-       (* (get-duration-aux
-	   last-noise #'(lambda (x) (push x last-noise))
-	   (floor *min-duration-noise* factor)
-	   (floor *max-duration-noise* factor)
-	   0)
-	  factor))))
-  
-  ;;; get a duration for the contemplative sounds.
-  (defun get-contemplative-duration ()
-    (when *verbose* (format t "~&get-contemplative-duration"))
-    (let* ((last-dur (car last-con))
-	   (nr-of-reps (length (loop for i in last-con while (= i last-dur)
-				     collect i))))
-      (if (>= last-dur *min-duration-con-pause*)
-	  (get-duration-aux
-	   last-con #'(lambda (x) (push x last-con))
-	   *min-duration-con* *max-duration-con*)
-	  ;; determines number of short notes after another
-	  (if (< (random-liminale) (* nr-of-reps 0.08))
-	      (get-duration-aux
-	       last-con #'(lambda (x) (push x last-con))
-	       *min-duration-con-pause* *max-duration-con-pause*)
-	      (progn (push last-dur last-con) last-dur))))))
-
-;;; Aux-function for getting a random but original duration between min-dur
-;;; and max-dur. last-ls is a list of durations to not chose, setter-fn should
-;;; be a lambda-function which adds the new value to a list.
-(defun get-duration-aux (last-ls setter-fn min-dur max-dur
-			 &optional (similar-dur-percent 10))
-  (let ((min-mult (ceiling min-dur *liminale-grid-mseconds*))
-	(max-mult (floor max-dur *liminale-grid-mseconds*)))
-    (loop for random-nr = (random-nldd 0.8 (random-liminale))
-	  for mult = (round (scale-to-log random-nr min-mult max-mult))
-	  for new-dur = (* mult *liminale-grid-mseconds*)
-	  for i from 0
-	  while (remove-if-not #'(lambda (x) (similar-durp x new-dur
-						      similar-dur-percent))
-			       (subseq last-ls 0 (min (length last-ls)
-						      *min-no-repetitions*)))
-	  when (> i 1000) do (setf last-ls (subseq last-ls 0
-						   (floor *min-no-repetitions* 2)))
-	    when (> i 100000)
-	      do (error "get-duration-aux: Can't find a mach! Are min, max and ~
-                       *min-no-repetitions* too restrictive??")
-	  finally (progn
-		    (funcall setter-fn new-dur)
-		    (return new-dur)))))
-
-;; *** filter-similar-options
-(defun filter-similar-options (options)
-    (let ((result '()))
-      (loop for freq in (car options)
-	    when (every #'(lambda (ls) (member freq ls :test #'similar-freqp))
-			options)
-	      do (push freq result))
-      (or result (filter-similar-options (cdr options)))))
-
-;; *** pick-original-freqs
-(defun pick-original-freqs (options last-freqs)
-  (unless options
-    (error "pick-original-freqs: no options!"))
-  (let ((result '()))
-    (loop for freq in options
-	  unless (member freq last-freqs :test #'similar-freqp)
-	    do (push freq result))
-    (or result
-	(pick-original-freqs
-	 options
-	 (subseq last-freqs 0 (1- (length last-freqs)))))))
-
-;; *** get-new-frequency
-
-;;; Functions for frequency selection follow here
-(let ((last-pad-freqs '(528))
-      (last-con-freqs '(528)))
-
-  (defun reset-last-freqs ()
-    (setf last-pad-freqs '(528))
-    (setf last-con-freqs '(528)))
-
-  (defun pad-priority-comp (x y)
-    (< (abs (- *center-freq-pads* x)) (abs (- *center-freq-pads* y))))
-  
-  ;;; get a frequency for the pad sounds 
-  (defun get-new-pad-frequency (&rest freqs)
-    (when *verbose* (format t "~&get-new-pad-frequency"))
-    ;; Sorting them by #'< means that lower freqs are more important in
-    ;; #'filter-similar-options
-    (setf freqs (sort freqs #'<))
-    (get-new-frequency-aux
-     last-pad-freqs #'(lambda (x) (push x last-pad-freqs))
-     freqs *pad-ratios* *min-freq* *max-freq*
-     #'(lambda (ls) (prefer-first-options (sort ls #'pad-priority-comp)))))
-  
-  ;;; get a frequency for the contemplative sounds
-  (defun get-new-contemplative-frequency (&rest freqs)
-    (when *verbose* (format t "~&get-new-contemplative-frequency"))
-    ;; include the last 2 (?) freqs, because they might still echo
-    (mapcar #'(lambda (x) (push x freqs))
-	    (subseq last-con-freqs 0 (min 2 (length last-con-freqs))))
-    ;; Sorting them by #'> means that higher freqs are more important in
-    ;; #'filter-similar-options
-    (setf freqs (sort freqs #'>))
-    (get-new-frequency-aux
-     last-con-freqs #'(lambda (x) (push x last-con-freqs))
-     freqs *con-ratios* (* 2 *min-freq*) *max-freq*
-     #'(lambda (ls) (or (find (car last-con-freqs) ls :test #'(lambda (x y) (<= x y)))
-		   (first ls))))))
-
-;;; Aux-function for getting a frequency that fits a list of other frequencies.
-;;; - last-ls: a list of freqs to avoid.
-;;; - setter-fn: a function that adds the new value to a list.
-;;; - freqs: list of other frequencies
-;;; - ratios: a list of ratios that the new frequency should be compared to the
-;;;   freqs in freqs.
-;;; - picking-fn: a list of options will be generated, sorted from lowest to
-;;;   highest. This function will be called to select one of these frequencies.
-;;;   If none is provided, the first is chosen.
-(defun get-new-frequency-aux (last-ls setter-fn freqs ratios min-freq max-freq
-			      &optional (picking-fn #'first))
-  (let ((options '())
-	(similar-options '())
-	result)
-    (unless freqs (push (car last-ls) freqs))
-    ;; calculate freqs from ratios for each input-freq
-    (loop for freq in freqs
-	  for derivatives
-	    = (loop for ratio in ratios
-		    for new-freq = (* freq ratio)
-		    when (<= min-freq new-freq max-freq)
-		      collect new-freq)
-	  when derivatives do (push derivatives options))
-    ;; filter options
-    (setf similar-options (filter-similar-options options))
-    ;; try and pick the most original frequency
-    (setf similar-options
-	  (pick-original-freqs
-	   similar-options
-	   (subseq last-ls 0 (min (length last-ls) *min-no-repetitions*))))
-    ;; pick one
-    (setf result (funcall picking-fn similar-options))
-    (funcall setter-fn result)
-    (round result)))
-
-;; *** generate-relaxing-notes
-;;; Generate the note material for some relaxing music, focused on long, slow,
-;;; and consonant harmony. This uses *liminale-grid-mseconds* as isochronal grid-size
+;; *** generate-notes
+;;; Generate a sequence of notes for at least the given duration. Notes are
+;;; generated according to their note-type. This uses *liminale-grid-mseconds*
+;;; as isochronal grid-size.
 ;;; - duration: Duration in seconds.
-(defun generate-relaxing-notes (duration &optional (reset-liminale t))
+;;; - note-types: A list of note-types (which can be defined with #'define-note-type)
+;;;   Unknown types will just use the generic methods for generation.
+;;; - reset-liminale: bool, whether to reset the random-number generator at the start.
+(defun generate-notes (duration &optional (note-types '(:pad)) (reset-liminale t))
   (when reset-liminale (reset-liminale))
   (setf duration (round (* 1000 duration)))
   (let ((time 0)
 	(note-list '())
 	(active-notes '())) ; a list of notes that are playing at 'time
     (loop while (<= time duration) do
-      (when *verbose* (format t "~&Generate at time ~a" time))
+      (when *verbose* (format t "~&Generating Notes at ~ams." time))
       ;; update list of active-notes
       (setf active-notes
 	    (loop for note in active-notes
 		  do (decf (note-time-left note) *liminale-grid-mseconds*)
 		  when (> (note-time-left note) 0)
 		    collect note))
-      ;; add new notes
-      (let* ((active-pad-notes (remove-if-not #'is-pad active-notes))
-	     (active-noise-notes (remove-if-not #'is-noise active-notes))
-	     (active-not-noise-notes (remove-if #'is-noise active-notes))
-	     (new-pad-notes (add-pad-harmony active-pad-notes time))
-	     (new-contemplative (add-contemplative active-not-noise-notes time))
-	     (new-noise-notes (add-noise active-noise-notes time)))
-	(mapcar #'(lambda (note) (push note active-notes) (push note note-list))
-		(append new-pad-notes new-contemplative new-noise-notes)))
+      ;; Call generation-methods for each note-type
+      ;; and push new notes to note-list and active-notes.
+      (loop for note-type in note-types
+	    do (mapcar #'(lambda (note)
+			   (push note active-notes)
+			   (push note note-list))
+		       (generate-new-notes
+			note-type
+			time
+			:active-notes active-notes
+			:note-list note-list)))   
       ;; step forward in time 
       (incf time *liminale-grid-mseconds*))
-    ;; TODO
-    ;; I want some sections to have regular rhythms (for the short sounds) and
-    ;; some to be more 'arbitrary' -> shifting notes with fixed seed randomness.
-    ;; Use something like (random (get-cut-off-sine-modulator (* 5 60))).
     note-list))
+
+;; *** get-new-duration-aux
+;;; Aux-function for getting a random but original duration between min-dur
+;;; and max-dur.
+(defun get-new-duration-aux (type &optional (similar-dur-percent 10))
+  (let ((min-mult (ceiling (get-min-duration type) *liminale-grid-mseconds*))
+	(max-mult (floor (get-max-duration type) *liminale-grid-mseconds*))
+	(last-ls (first-n (get-last-durs type) (get-min-no-repetitions type))))
+    (loop for random-nr = (random-nldd 0.8 (random-liminale))
+	  for mult = (round (scale-to-log random-nr min-mult max-mult))
+	  for new-dur = (* mult *liminale-grid-mseconds*)
+	  for i from 0
+	  while (remove-if-not
+		 #'(lambda (dur) (similar-durp dur new-dur similar-dur-percent))
+		 last-ls)
+	  when (> i 1000) do (setf last-ls
+				   (first-n last-ls (floor (length last-ls) 2)))
+	    when (> i 100000)
+	      do (error "get-duration-aux: Can't find a match for type ~a!"
+			type)
+	  finally (progn
+		    (add-last-dur type new-dur)
+		    (return new-dur)))))
+
+;; *** get-new-frequency-aux
+;;; Aux-function for getting a frequency that fits a list of other frequencies.
+;;; - freqs: A list of frequencies, for which a match is calculated
+;;; - picking-fn: a list of options will be generated. This function will be
+;;;   called to select one of these frequencies.
+(defun get-new-frequency-aux (type freqs &optional (picking-fn #'first))
+  (let ((last-freqs (first-n (get-last-freqs type) (get-min-no-repetitions type)))
+	(options '())
+	(similar-options '())
+	result)
+    (unless freqs (push (car last-freqs) freqs))
+    ;; calculate freqs from ratios for each input-freq
+    (loop for freq in freqs
+	  for derivatives
+	    = (loop for ratio in (get-ratios type)
+		    for new-freq = (* freq ratio)
+		    when (<= (get-min-freq type) new-freq (get-max-freq type))
+		      collect new-freq)
+	  when derivatives do (push derivatives options))
+    ;; filter options
+    (setf similar-options (filter-similar-options options))
+    ;; try and pick the most original frequency
+    (setf similar-options
+	  (pick-original-options similar-options last-freqs #'similar-freqp))
+    ;; pick one
+    (setf result (funcall picking-fn similar-options))
+    (add-last-freq type result)
+    (round result)))
+
+
+
+
 
 ;; *** playing-at-time
 ;;; time in ms

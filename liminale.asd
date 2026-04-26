@@ -9,11 +9,13 @@
   :pathname "src/"
   :components ((:file "package")
 	       (:file "helpers")
+	       (:file "note-types")
 	       (:file "modulators")
-	       (:file "parameters")
 	       (:file "notes")
-	       (:file "synths")
-	       ;;(:file "main")
+	       (:file "parameters")
+	       (:file "pad")
+	       (:file "contemplative")
+	       (:file "noise")
 	       ))
 
 ;; EOF liminale.asd

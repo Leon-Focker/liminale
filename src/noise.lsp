@@ -10,8 +10,8 @@
   )
 
 ;; *** generate-new-notes
-;;; Given a list of currently playing noisy notes, which notes should additionally
-;;; start to play? Return additional notes as a list.
+;;; Given a list of currently playing noisy notes, which notes should 
+;;; additionally start to play? Return additional notes as a list.
 (let ((last-played? t))
   (defmethod generate-new-notes ((type (eql :noise)) time
 				 &key active-notes
@@ -24,7 +24,9 @@
 			   :start time
 			   :duration (get-new-duration :noise)
 			   :type :noise
-			   :velocity (if last-played? 0 (+ 0.5 (* 0.5 (random-liminale))))))
+			   :velocity (if last-played?
+					 0
+					 (+ 0.5 (* 0.5 (random-liminale))))))
 	  (setf last-played? (not last-played?)))))))
 
 ;; *** get-new-duration

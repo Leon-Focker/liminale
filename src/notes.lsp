@@ -27,7 +27,9 @@
 ;;; - note-types: A list of note-types (which can be defined with #'define-note-type)
 ;;;   Unknown types will just use the generic methods for generation.
 ;;; - reset-liminale: bool, whether to reset the random-number generator at the start.
-(defun generate-notes (duration &optional (note-types '(:pad)) (reset-liminale t))
+;;; - verbose: when t, print a lot of stuff.
+(defun generate-notes (duration
+		       &optional (note-types '(:pad)) (reset-liminale t) verbose)
   (when reset-liminale
     (reset-random-liminale)
     (loop for type in note-types do (reset-note-type type)))
@@ -36,7 +38,8 @@
 	(note-list '())
 	(active-notes '())) ; a list of notes that are playing at 'time
     (loop while (<= time duration) do
-      (when *verbose* (format t "~&Generating Notes at ~ams." time))
+      (when verbose
+	(format t "~&Generating Notes at ~ams." time))
       ;; update list of active-notes
       (setf active-notes
 	    (loop for note in active-notes
@@ -53,7 +56,8 @@
 			note-type
 			time
 			:active-notes active-notes
-			:note-list note-list)))   
+			:note-list note-list
+			:verbose verbose)))
       ;; step forward in time 
       (incf time *liminale-grid-mseconds*))
     note-list))
@@ -109,10 +113,6 @@
     (setf result (funcall picking-fn similar-options))
     (add-last-freq type result)
     (round result)))
-
-
-
-
 
 ;; *** playing-at-time
 ;;; time in ms

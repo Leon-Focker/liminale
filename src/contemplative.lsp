@@ -106,13 +106,16 @@
   (get-new-frequency-aux
    type
    freqs 
-   #'(lambda (ls) (or (find (car (get-last-freqs type)) ls :test #'(lambda (x y) (<= x y)))
+   #'(lambda (ls) (or (find (car (get-last-freqs type))
+		       ls
+		       :test #'(lambda (x y) (<= x y)))
 		 (first ls)))))
 
 ;; *** reset
 ;;; becasue :contemplative also calls :contemplative-pause, we need this hook
 ;;; to reset the latter:
-(defmethod reset-note-type :after ((type (eql :contemplative)))
+(defmethod reset-note-type :after ((type (eql :contemplative))
+				   &key &allow-other-keys)
   (reset-note-type :contemplative-pause))
 
 ;; EOF contemplative.lsp

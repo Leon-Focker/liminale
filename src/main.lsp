@@ -19,17 +19,17 @@
 	    (pluck (make-note :freq (* ratio freq) :velocity 0.7 :duration 10000)))))
 
 (progn
-  (wsoundmp3 "liminale_test" 2
+  (wsound "liminale_test_new" 2
     (progn
       (loop for i from 0
-	    for note in (generate-relaxing-notes 1000)
+	    for note in (generate-notes 100 '(:pad :contemplative :noise))
 	    collect (case (note-type note)
-		      (pad
+		      (:pad
 		       (setf (note-freq note) (/ (note-freq note) 2))
 		       (dreamy-pad note i))
-		      (contemplative
+		      (:contemplative
 		       (pluck note i))
-		      (noise
+		      (:noise
 		       (splinter note))
 		      (t )))))
   (uiop:run-program

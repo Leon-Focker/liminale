@@ -6,7 +6,6 @@
 
 ;; *** generic parameters
 
-(defparameter *verbose* nil)
 (defmethod min-freq (type) 1)
 (defmethod max-freq (type) 2000)
 (defmethod min-duration (type) 1000)
@@ -19,12 +18,15 @@
 
 ;; *** generation
 
-(defgeneric reset-note-type (type))
+(defgeneric reset-note-type (type &key &allow-other-keys))
+
+(defmethod reset-note-type :before (type &key verbose &allow-other-keys)
+  (when verbose (format t "~&Resetting ~a" type)))
 
 (defmethod generate-new-notes (type time &key &allow-other-keys) '())
 ;;; this :around method acts as a check for the result of all generate-new-notes
-(defmethod generate-new-notes :around (type time &key &allow-other-keys)
-  (when *verbose* (format t "~&Generating new ~a notes..." type))
+(defmethod generate-new-notes :around (type time &key verbose &allow-other-keys)
+  (when verbose (format t "~&Generating new ~a notes..." type))
   (let ((result (call-next-method)))
     (test-note-list result (format nil "generate-new-notes with type ~a" type))
     result))
@@ -32,15 +34,8 @@
 (defmethod get-new-duration (type)
   (get-new-duration-aux type))
 
-(defmethod get-new-duration :before (type)
-  (when *verbose* (format t "~&Generating new ~a Duration" type)))
-
 (defmethod get-new-frequency (type &rest freqs)
   (get-new-frequency-aux type freqs))
-
-(defmethod get-new-frequency :before (type &rest freqs)
-  (declare (ignore freqs))
-  (when *verbose* (format t "~&Generating new ~a Frequency" type)))
 
 
 ;; ** def-note-type
@@ -86,8 +81,7 @@
 	 (defmethod get-last-freqs ((type (eql ,type-name))) (srb-get-all ,last-freqs))
 	 (defmethod add-last-freq ((type (eql ,type-name)) freq) (srb-add-value ,last-freqs freq))
 	 ;; this adds the reset-note-type method for the type
-	 (defmethod reset-note-type ((type (eql ,type-name)))
-	   (when *verbose* (format t "~&Resetting ~a" type))
+	 (defmethod reset-note-type ((type (eql ,type-name)) &key &allow-other-keys)
 	   (setf ,last-durs
 		 (make-simple-ringbuffer
 		  (max (or ,remember-n-last-notes 0)

@@ -12,7 +12,6 @@
 	       (:file "note-types")
 	       (:file "modulators")
 	       (:file "notes")
-	       (:file "parameters")
 	       (:file "pad")
 	       (:file "contemplative")
 	       (:file "noise")

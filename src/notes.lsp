@@ -28,7 +28,9 @@
 ;;;   Unknown types will just use the generic methods for generation.
 ;;; - reset-liminale: bool, whether to reset the random-number generator at the start.
 (defun generate-notes (duration &optional (note-types '(:pad)) (reset-liminale t))
-  (when reset-liminale (reset-liminale))
+  (when reset-liminale
+    (reset-random-liminale)
+    (loop for type in note-types do (reset-note-type type)))
   (setf duration (round (* 1000 duration)))
   (let ((time 0)
 	(note-list '())
@@ -60,9 +62,9 @@
 ;;; Aux-function for getting a random but original duration between min-dur
 ;;; and max-dur.
 (defun get-new-duration-aux (type &optional (similar-dur-percent 10))
-  (let ((min-mult (ceiling (get-min-duration type) *liminale-grid-mseconds*))
-	(max-mult (floor (get-max-duration type) *liminale-grid-mseconds*))
-	(last-ls (first-n (get-last-durs type) (get-min-no-repetitions type))))
+  (let ((min-mult (ceiling (min-duration type) *liminale-grid-mseconds*))
+	(max-mult (floor (max-duration type) *liminale-grid-mseconds*))
+	(last-ls (first-n (get-last-durs type) (min-no-repetitions type))))
     (loop for random-nr = (random-nldd 0.8 (random-liminale))
 	  for mult = (round (scale-to-log random-nr min-mult max-mult))
 	  for new-dur = (* mult *liminale-grid-mseconds*)
@@ -85,7 +87,7 @@
 ;;; - picking-fn: a list of options will be generated. This function will be
 ;;;   called to select one of these frequencies.
 (defun get-new-frequency-aux (type freqs &optional (picking-fn #'first))
-  (let ((last-freqs (first-n (get-last-freqs type) (get-min-no-repetitions type)))
+  (let ((last-freqs (first-n (get-last-freqs type) (min-no-repetitions type)))
 	(options '())
 	(similar-options '())
 	result)
@@ -93,9 +95,9 @@
     ;; calculate freqs from ratios for each input-freq
     (loop for freq in freqs
 	  for derivatives
-	    = (loop for ratio in (get-ratios type)
+	    = (loop for ratio in (ratios type)
 		    for new-freq = (* freq ratio)
-		    when (<= (get-min-freq type) new-freq (get-max-freq type))
+		    when (<= (min-freq type) new-freq (max-freq type))
 		      collect new-freq)
 	  when derivatives do (push derivatives options))
     ;; filter options

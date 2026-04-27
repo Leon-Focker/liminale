@@ -38,21 +38,21 @@
 ;; *** generate-new-notes
 ;;; Given a list of currently playing notes, which notes should additionally
 ;;; start to play? Return additional notes as a list.
+(defun is-older-pad (note)
+  (and (is-pad note)
+       (<= 6 (- (note-duration note) (note-time-left note)))))
+
 (let ((last-was-pause nil)
       (nr-of-reps 0))
-  (defmethod generate-new-notes ((type (eql :contemplative)) time
+
+  (defmethod generate-new-notes ((type (eql :contemplative))
+				 time
 				 &key active-notes
 				 &allow-other-keys)
     (when (<= time 0) (setf last-was-pause nil))
     (let ((contemplative-notes (remove-if-not #'is-contemplative active-notes))
 	  (pause-notes (remove-if-not #'is-contemplative-pause active-notes))
-	  (pad-notes
-	    (remove-if-not
-	     #'(lambda (note) (and (is-pad note)
-			      (>= (- (note-duration note)
-				     (note-time-left note))
-				  6)))
-	     active-notes)))
+	  (pad-notes (remove-if-not #'is-older-pad active-notes)))
       (when (null (append contemplative-notes pause-notes))
 	(if last-was-pause
 	    ;; generate :contemplative notes
@@ -67,7 +67,7 @@
 			  :duration duration
 			  :type :contemplative
 			  ;; between 0.0 and 0.75
-			  :velocity (* (get-mod-value *contemplative-vel-mod* time) 2.5)
+			  :velocity (* (get-mod-value (density-mod :pad) time t) 0.75)
 			  :delay-time (scale-until-in-range (/ duration 1000) 0.2 0.45 3)
 			  :freq (apply #'get-new-frequency
 				       :contemplative
@@ -108,5 +108,11 @@
    freqs 
    #'(lambda (ls) (or (find (car (get-last-freqs type)) ls :test #'(lambda (x y) (<= x y)))
 		 (first ls)))))
+
+;; *** reset
+;;; becasue :contemplative also calls :contemplative-pause, we need this hook
+;;; to reset the latter:
+(defmethod reset-note-type :after ((type (eql :contemplative)))
+  (reset-note-type :contemplative-pause))
 
 ;; EOF contemplative.lsp

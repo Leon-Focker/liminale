@@ -2,13 +2,6 @@
 
 (in-package :liminale)
 
-;; ** reset
-
-(defun reset-liminale ()
-  (reset-random-liminale)
-  (reset-last-durations)
-  (reset-last-freqs))
-
 ;; ** randomness
 
 (let* ((seed 5)

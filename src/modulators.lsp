@@ -9,8 +9,11 @@
 
 ;; *** get-modulator-value
 ;;; Time in miliseconds -> some y-value
-(defun get-mod-value (modulator time-in-ms)
-  (funcall (modulator-fn modulator) (/ time-in-ms 1000)))
+(defun get-mod-value (modulator time-in-ms &optional normalize)
+  (let ((result (funcall (modulator-fn modulator) (/ time-in-ms 1000))))
+    (if normalize
+	(rescale result (modulator-min modulator) (modulator-max modulator) 0 1)
+	result)))
 
 ;; ** some modulators
 

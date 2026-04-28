@@ -61,21 +61,26 @@
   (let ((len (length sequence)))
     (subseq sequence 0 (min len n))))
 
-;; *** similar-freqp
-;;; check whether two frequencies are similar; two frequencies are considered
-;;; similar when one is no more than 4% greater than the other.
-(defun similar-freqp (freq1 freq2 &optional (percent (* 100 (1- (expt 2 1/24)))))
-  (let* ((diff (abs (- freq1 freq2)))
-	 (min (min freq1 freq2)))
+;; *** similarp
+;;; check whether two numerical values are similar, meaning they differ by at
+;;; most x percent.
+(defun similarp (val1 val2 &optional (percent 10))
+  (let* ((diff (abs (- val1 val2)))
+	 (min (min val1 val2)))
     (<= diff (* min (/ percent 100)))))
+
+;; *** similar-freqp
+;;; check whether two frequencies are similar; By default two frequencies are
+;;; considered similar when one is no more than 2.93% (one quarter tone) greater
+;;; than the other.
+(defun similar-freqp (freq1 freq2 &optional (percent (* 100 (1- (expt 2 1/24)))))
+  (similarp freq1 freq2 percent))
 
 ;; *** similar-durp
 ;;; check whether two durations are similar; two durations are considered
 ;;; similar when one is no more than 10% greater than the other.
 (defun similar-durp (dur1 dur2 &optional (percent 10))
-  (let* ((diff (abs (- dur1 dur2)))
-	 (min (min dur1 dur2)))
-    (<= diff (* min (/ percent 100)))))
+  (similarp dur1 dur2 percent))
 
 ;; *** scale-to-log
 ;;; Scale number x on a logarithmic scale from min to max.
@@ -102,14 +107,14 @@
 ;;; Get a list of lists of options and find options, that appear in as many of
 ;;; those lists as possible. The Latter options-lists are prefered, the earlier
 ;;; ones discarded first.
-(defun filter-similar-options (options-lists)
+(defun filter-similar-options (options-lists &optional (similar-within-percent 10))
   (when options-lists
-    (let ((result '()))
-      (loop for freq in (car options-lists)
-	    when (every #'(lambda (ls) (member freq ls :test #'similar-freqp))
-			options-lists)
-	      do (push freq result))
-      (or result (filter-similar-options (cdr options-lists))))))
+    (flet ((simp (x y) (similarp x y similar-within-percent)))
+      (let ((result '()))
+	(loop for option in (car options-lists)
+	      when (every #'(lambda (ls) (member option ls :test #'simp)) options-lists)
+		do (push option result))
+	(or result (filter-similar-options (cdr options-lists)))))))
 
 ;; *** pick-original-options
 ;;; Given a list of last picks, try and find options that haven't recently been

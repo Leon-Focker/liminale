@@ -12,9 +12,10 @@
 (defmethod max-duration (type) 10000)
 (defmethod min-no-repetitions (type) 1)
 (defmethod remember-n-last-notes (type) 1)
-(defmethod ratios (type) '(2 3 4 5 6 7 8 1/2 1/3 1/4 1/5 1/6 1/7 1/8))
+(defmethod freq-ratios (type) '(2 3 4 5 6 7 8 1/2 1/3 1/4 1/5 1/6 1/7 1/8))
+(defmethod dur-ratios (type) nil)
 (defmethod init-freq (type) 528)
-(defmethod init-dur (type) nil)
+(defmethod init-dur (type) 1000)
 
 ;; *** generation
 
@@ -31,11 +32,11 @@
     (test-note-list result (format nil "generate-new-notes with type ~a" type))
     result))
 
-(defmethod get-new-duration (type)
-  (get-new-duration-aux type))
+(defmethod get-new-duration (type &rest durs)
+  (apply #'get-new-duration-aux type durs))
 
 (defmethod get-new-frequency (type &rest freqs)
-  (get-new-frequency-aux type freqs))
+  (apply #'get-new-frequency-aux type freqs))
 
 
 ;; ** def-note-type
@@ -49,7 +50,8 @@
 			      max-duration
 			      min-no-repetitions
 			      remember-n-last-notes
-			      ratios
+			      freq-ratios
+			      dur-ratios
 			      init-freq
 			      init-dur
 			    &allow-other-keys)
@@ -86,12 +88,12 @@
 		 (make-simple-ringbuffer
 		  (max (remember-n-last-notes ,type-name)
 		       (min-no-repetitions ,type-name))
-		  :init-element (or ,init-dur 0))
+		  :init-element (init-dur ,type-name))
 		 ,last-freqs
  		 (make-simple-ringbuffer
 		  (max (remember-n-last-notes ,type-name)
 		       (min-no-repetitions ,type-name))
-		  :init-element (or ,init-freq 528)))
+		  :init-element (init-freq ,type-name)))
 	   t)
 	 ;; call the reset function to init the closure variables
 	 (reset-note-type ,type-name)))))

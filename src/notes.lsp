@@ -65,32 +65,66 @@
 ;; *** get-new-duration-aux
 ;;; Aux-function for getting a random but original duration between min-dur
 ;;; and max-dur.
-(defun get-new-duration-aux (type &optional (similar-dur-percent 10))
+(defun get-new-duration-aux (type durs
+			     &optional
+			       (picking-fn #'first)
+			       (similar-dur-percent 10))
+  (let ((last-durs (first-n (get-last-durs type) (min-no-repetitions type)))
+	(options '())
+	(similar-options '())
+	result)
+    (unless durs (push (car last-durs) durs))
+    (when (dur-ratios type)
+      ;; calculate durs from ratios for each input-dur
+      (loop for dur in durs
+	    for derivatives
+	      = (loop for ratio in (dur-ratios type)
+		      for new-dur = (* dur ratio)
+		      when (<= (min-duration type) new-dur (max-duration type))
+			collect new-dur)
+	    when derivatives do (push derivatives options))
+      ;; filter options
+      (setf similar-options (filter-similar-options options similar-dur-percent))
+      ;; try and pick the most original frequency
+      (setf
+       similar-options
+       (pick-original-options
+	similar-options
+	last-durs
+	#'(lambda (x y) (similarp x y similar-dur-percent))))
+      ;; pick one
+      (setf result (funcall picking-fn similar-options)))
+    ;; when no ratios are supplied or no matches are found, find a random dur
+    (unless options
+      (setf result (get-random-original-dur type last-durs similar-dur-percent)))
+    (add-last-dur type result)
+    (round result)))
+
+(defun get-random-original-dur (type last-durs similar-dur-percent)
   (let ((min-mult (ceiling (min-duration type) *liminale-grid-mseconds*))
-	(max-mult (floor (max-duration type) *liminale-grid-mseconds*))
-	(last-ls (first-n (get-last-durs type) (min-no-repetitions type))))
-    (loop for random-nr = (random-nldd 0.8 (random-liminale))
-	  for mult = (round (scale-to-log random-nr min-mult max-mult))
-	  for new-dur = (* mult *liminale-grid-mseconds*)
-	  for i from 0
-	  while (remove-if-not
-		 #'(lambda (dur) (similar-durp dur new-dur similar-dur-percent))
-		 last-ls)
-	  when (> i 1000) do (setf last-ls
-				   (first-n last-ls (floor (length last-ls) 2)))
-	    when (> i 100000)
-	      do (error "get-duration-aux: Can't find a match for type ~a!"
-			type)
-	  finally (progn
-		    (add-last-dur type new-dur)
-		    (return new-dur)))))
+	(max-mult (floor (max-duration type) *liminale-grid-mseconds*)))
+    (labels ((helper (last-durs i)
+	       (let* ((random-nr (random-nldd 0.8 (random-liminale)))
+		      (mult (round (scale-to-log random-nr min-mult max-mult)))
+		      (new-dur (* mult *liminale-grid-mseconds*)))
+		 (if (remove-if-not
+		      #'(lambda (dur) (similarp dur new-dur similar-dur-percent))
+		      last-durs)
+		     (if (> i 100)
+			 (helper (first-n last-durs (floor (length last-durs) 2)) 0)
+			 (helper last-durs (1+ i)))
+		     new-dur))))
+      (helper last-durs 0))))
 
 ;; *** get-new-frequency-aux
 ;;; Aux-function for getting a frequency that fits a list of other frequencies.
 ;;; - freqs: A list of frequencies, for which a match is calculated
 ;;; - picking-fn: a list of options will be generated. This function will be
 ;;;   called to select one of these frequencies.
-(defun get-new-frequency-aux (type freqs &optional (picking-fn #'first))
+(defun get-new-frequency-aux (type freqs
+			      &optional
+				(picking-fn #'first)
+				(similar-freq-percent (* 100 (1- (expt 2 1/24)))))
   (let ((last-freqs (first-n (get-last-freqs type) (min-no-repetitions type)))
 	(options '())
 	(similar-options '())
@@ -99,16 +133,20 @@
     ;; calculate freqs from ratios for each input-freq
     (loop for freq in freqs
 	  for derivatives
-	    = (loop for ratio in (ratios type)
+	    = (loop for ratio in (freq-ratios type)
 		    for new-freq = (* freq ratio)
 		    when (<= (min-freq type) new-freq (max-freq type))
 		      collect new-freq)
 	  when derivatives do (push derivatives options))
     ;; filter options
-    (setf similar-options (filter-similar-options options))
+    (setf similar-options (filter-similar-options options similar-freq-percent))
     ;; try and pick the most original frequency
-    (setf similar-options
-	  (pick-original-options similar-options last-freqs #'similar-freqp))
+    (setf
+       similar-options
+       (pick-original-options
+	similar-options
+	last-freqs
+	#'(lambda (x y) (similarp x y similar-freq-percent))))
     ;; pick one
     (setf result (funcall picking-fn similar-options))
     (add-last-freq type result)

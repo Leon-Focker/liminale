@@ -30,7 +30,7 @@
 	  (setf last-played? (not last-played?)))))))
 
 ;; *** get-new-duration
-(defmethod get-new-duration ((type (eql :noise)))
-  (get-new-duration-aux type 30))
+(defmethod get-new-duration ((type (eql :noise)) &rest durs)
+  (get-new-duration-aux type durs 30))
 
 ;; EOF noise.lsp

@@ -6,6 +6,8 @@
 
 (format t "~& ~&relaxing now :3~& ~&")
 
+(setf *liminale-grid-mseconds* 100)
+
 ;; (wsound "sine-test" 1 (clm::simple-sine 0 0.1 214 0.1))
 
 ;; test ratios
@@ -19,7 +21,7 @@
 	    (pluck (make-note :freq (* ratio freq) :velocity 0.7 :duration 10000)))))
 
 (progn
-  (wsound "liminale_test_new" 2
+  (wsoundmp3 "liminale_test_new" 2
     (progn
       (loop for i from 0
 	    for note in (generate-notes 100 '(:pad :contemplative :noise))

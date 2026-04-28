@@ -10,8 +10,8 @@
 (defmethod max-freq (type) 2000)
 (defmethod min-duration (type) 1000)
 (defmethod max-duration (type) 10000)
-(defmethod min-no-repetitions (type) 5)
-(defmethod remember-n-last-notes (type) 5)
+(defmethod min-no-repetitions (type) 1)
+(defmethod remember-n-last-notes (type) 1)
 (defmethod ratios (type) '(2 3 4 5 6 7 8 1/2 1/3 1/4 1/5 1/6 1/7 1/8))
 (defmethod init-freq (type) 528)
 (defmethod init-dur (type) nil)
@@ -84,12 +84,12 @@
 	 (defmethod reset-note-type ((type (eql ,type-name)) &key &allow-other-keys)
 	   (setf ,last-durs
 		 (make-simple-ringbuffer
-		  (max (or ,remember-n-last-notes 0)
+		  (max (remember-n-last-notes ,type-name)
 		       (min-no-repetitions ,type-name))
 		  :init-element (or ,init-dur 0))
 		 ,last-freqs
  		 (make-simple-ringbuffer
-		  (max (or ,remember-n-last-notes 0)
+		  (max (remember-n-last-notes ,type-name)
 		       (min-no-repetitions ,type-name))
 		  :init-element (or ,init-freq 528)))
 	   t)

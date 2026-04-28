@@ -64,7 +64,7 @@
 ;; *** similar-freqp
 ;;; check whether two frequencies are similar; two frequencies are considered
 ;;; similar when one is no more than 4% greater than the other.
-(defun similar-freqp (freq1 freq2 &optional (percent 4))
+(defun similar-freqp (freq1 freq2 &optional (percent (* 100 (1- (expt 2 1/24)))))
   (let* ((diff (abs (- freq1 freq2)))
 	 (min (min freq1 freq2)))
     (<= diff (* min (/ percent 100)))))

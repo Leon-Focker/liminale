@@ -3,16 +3,18 @@
 (in-package :clm)
 
 ;; *** sine
-(definstrument sine (start dur freq amp &key (amp-env '(0 1  100 1)))
+(definstrument sine (start dur freq amp &key (amp-env '(0 1  100 1)) (freq-offset-b 0))
   (let* ((st (floor (* start *srate*)))
 	 (nd (+ st (floor (* *srate* dur))))
-	 (osc (make-oscil :frequency freq))
+	 (osca (make-oscil :frequency freq))
+	 (oscb (make-oscil :frequency (+ freq freq-offset-b)))
 	 (amp-env (make-env :envelope amp-env :scaler amp :duration dur))
 	 #|(loc (make-locsig))|#)
     (Run
      (loop for i from st to nd do
-       (let ((val (* amp (oscil osc) (env amp-env))))
-	 (outa i val)
-	 (outb i val))))))
+       (let ((vala (* amp (oscil osca) (env amp-env)))
+	     (valb (* amp (oscil oscb) (env amp-env))))
+	 (outa i vala)
+	 (outb i valb))))))
 
 ;; EOF sine.ins

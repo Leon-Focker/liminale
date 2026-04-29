@@ -35,6 +35,7 @@
           (fade-window hann-window) ; or any type given in clm.html
           (amp 1.0)
           (srt 1.0)
+          srtb
           (start 0.0)
           (ping-pong nil)
           (printing t)
@@ -90,7 +91,7 @@
          (fouti foutsamps)
          (inputA (make-src :input fA :srate srt))
          (inputB (when stereo-input 
-                   (make-src :input fB :srate srt)))
+                   (make-src :input fB :srate (or srtb srt))))
          (count 0)
          (amp-val 0.0)
          (qval 0.0)
@@ -101,26 +102,31 @@
          (hpfval 0.0)
          (nd (+ st (floor (* *srate* dur))))
          (foutbeg (1+ (- nd foutsamps)))
-	 (ml 0)
-	 (has-reversed nil))
+	 (mla 0)
+	 (mlb 0)
+	 (has-reverseda nil)
+	 (has-reversedb nil))
     (run
      (loop for i from st to nd do
           (when printing (setf count (if (= count *srate*) 1 (+ count 1)))
                 (when (= count *srate*)
                   (clm-print t "~&~asecs" (round (/ i *srate*)))))
-	  ;; get the current ml (only for A, they should be in sync)
-          (setf ml (mus-location inputA))
+	  ;; get the current ml
+          (setf mla (mus-location inputA))
+          (setf mlb (mus-location inputB))
 	  ;; if we're past the last input sample start going backwards.
-	  (when (and ping-pong (>= ml ping-pong-end-sample))
-	    (setf srt (- srt) has-reversed t) 
-            (setf (mus-increment inputA) srt)
-	    (when stereo-input (setf (mus-increment inputB) srt)))
+	  (when (and ping-pong (>= mla ping-pong-end-sample))
+	    (setf has-reverseda t) 
+            (setf (mus-increment inputA) (- srt)))
+	  (when (and stereo-input ping-pong (>= mlb ping-pong-end-sample))
+	    (setf has-reversedb t) 
+            (setf (mus-increment inputB) (- (or srtb srt))))
 	  ;; similarly, if we're before the first input sample, start going
 	  ;; forwards.
-          (when (and ping-pong has-reversed (<= ml st))
-	    (setf srt (- srt))
-            (setf (mus-increment inputA) srt)
-	    (when stereo-input (setf (mus-increment inputB) srt)))
+          (when (and ping-pong has-reverseda (<= mla st))
+            (setf (mus-increment inputA) srt))
+	  (when (and stereo-input ping-pong has-reversedb (<= mlb st))
+            (setf (mus-increment inputB) (or srtb srt)))
 	  ;; get sample and apply filter
           (setf qval (env qenv)
                 fval (env fenv)

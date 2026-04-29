@@ -49,7 +49,7 @@
 				 time
 				 &key active-notes
 				 &allow-other-keys)
-    (when (<= time 0) (setf last-was-pause nil))
+    (when (<= time 0) (setf last-was-pause nil nr-of-reps 0))
     (let ((contemplative-notes (remove-if-not #'is-contemplative active-notes))
 	  (pause-notes (remove-if-not #'is-contemplative-pause active-notes))
 	  (pad-notes (remove-if-not #'is-older-pad active-notes)))
@@ -73,7 +73,7 @@
 				       :contemplative
 				       (mapcar #'note-freq
 					       (append contemplative-notes
-						       pad-notes))))))    
+						       pad-notes))))))
 	    ;; generate :contemplative-pause notes
 	    (generate-new-notes :contemplative-pause time)))))
   
@@ -105,7 +105,7 @@
   ;; call to aux method
   (get-new-frequency-aux
    type
-   freqs 
+   freqs
    #'(lambda (ls) (or (find (car (get-last-freqs type))
 		       ls
 		       :test #'(lambda (x y) (<= x y)))

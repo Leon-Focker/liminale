@@ -32,6 +32,11 @@
   :init-freq 528
   :init-dur 1000)
 
+(defmethod get-last-durs (type) '())
+(defmethod add-last-dur (type dur) '())
+(defmethod get-last-freqs (type) '())
+(defmethod add-last-freq (type freq) '())
+
 ;; *** generation
 
 (defgeneric reset-note-type (type &key &allow-other-keys))
@@ -48,10 +53,10 @@
     result))
 
 (defmethod get-new-duration (type &rest durs)
-  (apply #'get-new-duration-aux type durs))
+  (get-new-duration-aux type durs))
 
 (defmethod get-new-frequency (type &rest freqs)
-  (apply #'get-new-frequency-aux type freqs))
+  (get-new-frequency-aux type freqs))
 
 
 ;; ** def-note-type

@@ -86,8 +86,8 @@
    #'(lambda (ls) (nth (floor (* (random-liminale) (length ls))) ls))))
   ; #'(lambda (ls) (prefer-first-options (sort ls #'chord-priority-comp)))))
 
-(notes-to-midi (generate-notes 100 '(:piano-chords))
-	       "/home/leon/piano-chords.mid")
-
+;; Generate the Midi File:
+#+nil(notes-to-midi (generate-notes 100 '(:piano-chords))
+		    "/home/leon/piano-chords.mid")
 
 ;; EOF piano.lsp

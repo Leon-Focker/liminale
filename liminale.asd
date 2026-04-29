@@ -15,6 +15,6 @@
 	       (:file "pad")
 	       (:file "contemplative")
 	       (:file "noise")
-	       ))
+	       (:file "piano")))
 
 ;; EOF liminale.asd

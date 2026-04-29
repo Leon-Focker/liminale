@@ -6,16 +6,31 @@
 
 ;; *** generic parameters
 
-(defmethod min-freq (type) 1)
-(defmethod max-freq (type) 2000)
-(defmethod min-duration (type) 1000)
-(defmethod max-duration (type) 10000)
-(defmethod min-no-repetitions (type) 1)
-(defmethod remember-n-last-notes (type) 1)
-(defmethod freq-ratios (type) '(2 3 4 5 6 7 8 1/2 1/3 1/4 1/5 1/6 1/7 1/8))
-(defmethod dur-ratios (type) nil)
-(defmethod init-freq (type) 528)
-(defmethod init-dur (type) 1000)
+(defmacro define-generics-for-note-types (&rest generic-values)
+  `(progn
+     ,@(loop for (keyword value) on generic-values by #'cddr
+	     for getter-name = (intern (format nil "~A" keyword))
+	     collect `(defmethod ,getter-name (type) ,value)
+	     collect `(defmethod (setf ,getter-name) (new-value type)
+			(error "Setf ~a: ~a~a~a~a~a"
+			       ',getter-name
+			       "You're trying to set the generic value, "
+			       ',keyword
+			       " was not defined for type "
+			       type
+			       "!")))))
+  
+(define-generics-for-note-types
+    :min-freq 1
+  :max-freq 2000
+  :min-duration 1000
+  :max-duration 10000
+  :min-no-repetitions 1
+  :remember-n-last-notes 1
+  :freq-ratios '(2 3 4 5 6 7 8 1/2 1/3 1/4 1/5 1/6 1/7 1/8)
+  :dur-ratios nil
+  :init-freq 528
+  :init-dur 1000)
 
 ;; *** generation
 

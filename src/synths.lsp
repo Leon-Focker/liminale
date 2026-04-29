@@ -30,7 +30,7 @@
 
 ;; ** dreamy-pad
 
-(defun dreamy-pad (note &optional (i 0) filter-sweep)
+(defun dreamy-pad (note &optional (i 0) filter-sweep (freq-offset-b 0))
   (let* ((start (/ (note-start note) 1000.0))
 	 (duration (/ (note-duration note) 1000.0))
 	 (freq (note-freq note))
@@ -45,26 +45,33 @@
 		     (data soundpile)))
 	 (sound (nth-mod i sounds))
 	 (sound-freq (car (fundamental-frequency sound)))
-	 (base-srt (/ freq sound-freq))
 	 (amp-env '(0 0  10 1  95 1  100 0)))
-    (append
-     (loop for mult in '(1 2 3)
-	   for amp in '(0.1 0.08 0.05)
-	   append (clm::moog
-		   (path sound)
-		   (+ start (* (1- mult) 2))
-		   :amp amp
-		   :amp-env amp-env
-		   :moog t
-		   :srt (* base-srt mult)
-		   :duration duration
-		   :ping-pong t
-		   :res-env (if filter-sweep '(0 0.5  1 0.5) '(0 0  1 0))
-		   :freq-env (if filter-sweep
-				 `(0 0  0.7 4000  1 ,freq)
-				 `(0 ,(* freq filter-mult)  0.7 ,(* freq filter-mult)  1 ,freq))
-		   :freq-env-expt 8))
-     (clm::sine start duration freq 0.05 :amp-env amp-env))))
+    (loop for mult in '(1 2 3)
+	  for srt = (/ (* freq mult) sound-freq)
+	  ;; for srtb = (/ (+ (* freq mult) freq-offset-b) sound-freq)
+	  for amp in '(0.1 0.08 0.05)
+	  append (clm::moog
+		  (path sound)
+		  (+ start (* (1- mult) 2))
+		  :amp amp
+		  :amp-env amp-env
+		  :moog t
+		  :srt srt
+		  ;;:srtb srtb
+		  :duration duration ; should duration be shortened by later start?
+		  :ping-pong t
+		  :res-env (if filter-sweep '(0 0.5  1 0.5) '(0 0  1 0))
+		  :freq-env (if filter-sweep
+				`(0 0  0.7 4000  1 ,freq)
+				`(0 ,(* freq filter-mult)  0.7 ,(* freq filter-mult)  1 ,freq))
+		  :freq-env-expt 8)
+	  append (clm::sine
+		  start
+		  duration
+		  (* freq mult)
+		  (/ amp 2)
+		  :amp-env amp-env
+		  :freq-offset-b freq-offset-b))))
 
 ;; ** pluck
 (defun pluck (note &optional (i 0))
@@ -122,17 +129,17 @@
 				      :srt 0.8
 				      :amp amp
 				      :ramp 100000
-				      :silence-env '(0 1  40 0  60 0.3  100 1)
+				      ;;:silence-env '(0 1  40 0  60 0.3  100 1)
 				      :amp-env '(0 0  30 1  70 1  100 0)
 				      :amp-env-base 0.5
 				      ))))
       (clm::moog splint start
-		 :amp (* 1.5 (+ 0.1 (* 0.4 vel)))
-					; :amp-env amp-env
+		 :amp (* 1 (+ 0.1 (* 0.4 vel)))
+		 ;; :amp-env amp-env
 		 :moog t
 		 :duration duration
 		 :res-env '(0 0 1 0)
-		 :freq-env '(0 1000  40 5000  60 5000  100 1000)
+		 :freq-env '(0 1000  30 5000  75 5000  100 1000)
 		 :freq-env-expt 8))))
 
 ;; EOF synths.lsp

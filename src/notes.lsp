@@ -65,8 +65,9 @@
 ;; *** get-new-duration-aux
 ;;; Aux-function for getting a random but original duration between min-dur
 ;;; and max-dur.
-(defun get-new-duration-aux (type durs
+(defun get-new-duration-aux (type
 			     &optional
+			       durs
 			       (picking-fn #'first)
 			       (similar-dur-percent 10))
   (let ((last-durs (first-n (get-last-durs type) (min-no-repetitions type)))
@@ -121,8 +122,9 @@
 ;;; - freqs: A list of frequencies, for which a match is calculated
 ;;; - picking-fn: a list of options will be generated. This function will be
 ;;;   called to select one of these frequencies.
-(defun get-new-frequency-aux (type freqs
+(defun get-new-frequency-aux (type
 			      &optional
+				freqs
 				(picking-fn #'first)
 				(similar-freq-percent (* 100 (1- (expt 2 1/24)))))
   (let ((last-freqs (first-n (get-last-freqs type) (min-no-repetitions type)))
@@ -142,11 +144,11 @@
     (setf similar-options (filter-similar-options options similar-freq-percent))
     ;; try and pick the most original frequency
     (setf
-       similar-options
-       (pick-original-options
-	similar-options
-	last-freqs
-	#'(lambda (x y) (similarp x y similar-freq-percent))))
+     similar-options
+     (pick-original-options
+      similar-options
+      last-freqs
+      #'(lambda (x y) (similarp x y similar-freq-percent))))
     ;; pick one
     (setf result (funcall picking-fn similar-options))
     (add-last-freq type result)

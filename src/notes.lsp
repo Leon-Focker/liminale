@@ -74,7 +74,7 @@
 	(options '())
 	(similar-options '())
 	result)
-    (unless durs (push (car last-durs) durs))
+    (unless durs (push (or (car last-durs) (car (get-last-durs type))) durs))
     (when (dur-ratios type)
       ;; calculate durs from ratios for each input-dur
       (loop for dur in durs
@@ -131,7 +131,7 @@
 	(options '())
 	(similar-options '())
 	result)
-    (unless freqs (push (car last-freqs) freqs))
+    (unless freqs (push (or (car last-freqs) (car (get-last-freqs type))) freqs))
     ;; calculate freqs from ratios for each input-freq
     (loop for freq in freqs
 	  for derivatives

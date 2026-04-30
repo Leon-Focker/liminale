@@ -1,0 +1,291 @@
+
+(MAKE-INSTANCE 'SOUNDPILE :ID 'ACCORDION :DATA
+               (LIST
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_23 :DATA 'NIL :NAME
+                               '"basic_23" :PATH
+                               '"/E/liminale/samples/basic/basic_23.wav"
+                               :DURATION '4.607146 :TOTAL-SAMPLES '221143
+                               :SAMPLERATE '48000 :PEAK '0.05449261516332626d0
+                               :PEAK-INDEX '214496 :CENTROID
+                               '(630.2458614233472d0) :SPREAD
+                               '(227.13944899649937d0) :FLATNESS
+                               '(0.11795595635105127d0) :DOMINANT-FREQUENCY
+                               '(590.0964913365445d0) :FUNDAMENTAL-FREQUENCY
+                               '(591.7969) :SMOOTHNESS '0.7408069019531293d0
+                               :TRANSIENT '0.17072101513307147d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_22 :DATA 'NIL :NAME
+                               '"basic_22" :PATH
+                               '"/E/liminale/samples/basic/basic_22.wav"
+                               :DURATION '11.625 :TOTAL-SAMPLES '558000
+                               :SAMPLERATE '48000 :PEAK '0.15372052788734436d0
+                               :PEAK-INDEX '532759 :CENTROID
+                               '(316.4745565264238d0) :SPREAD
+                               '(314.75616742491286d0) :FLATNESS
+                               '(0.036422957066572025d0) :DOMINANT-FREQUENCY
+                               '(259.35492507031273d0) :FUNDAMENTAL-FREQUENCY
+                               '(260.1163948157889d0) :SMOOTHNESS
+                               '0.7593343579873545d0 :TRANSIENT
+                               '0.1608957974529175d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_21 :DATA 'NIL :NAME
+                               '"basic_21" :PATH
+                               '"/E/liminale/samples/basic/basic_21.wav"
+                               :DURATION '19.5 :TOTAL-SAMPLES '936000
+                               :SAMPLERATE '48000 :PEAK '0.4422225058078766d0
+                               :PEAK-INDEX '560194 :CENTROID
+                               '(591.6799318663076d0) :SPREAD
+                               '(791.7592313768789d0) :FLATNESS
+                               '(0.03571788994892134d0) :DOMINANT-FREQUENCY
+                               '(328.2343260180974d0) :FUNDAMENTAL-FREQUENCY
+                               '(328.7662206955807d0) :SMOOTHNESS
+                               '0.6815606314561321d0 :TRANSIENT
+                               '0.21487114839182067d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_20 :DATA 'NIL :NAME
+                               '"basic_20" :PATH
+                               '"/E/liminale/samples/basic/basic_20.wav"
+                               :DURATION '19.660707 :TOTAL-SAMPLES '943714
+                               :SAMPLERATE '48000 :PEAK '0.011528638191521168d0
+                               :PEAK-INDEX '930088 :CENTROID
+                               '(566.5705491012487d0) :SPREAD
+                               '(142.11904171006367d0) :FLATNESS
+                               '(0.1916945881945064d0) :DOMINANT-FREQUENCY
+                               '(550.8857495786766d0) :FUNDAMENTAL-FREQUENCY
+                               '(551.1085185953831d0) :SMOOTHNESS
+                               '0.776218844394516d0 :TRANSIENT
+                               '0.12292807260172779d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_19 :DATA 'NIL :NAME
+                               '"basic_19" :PATH
+                               '"/E/liminale/samples/basic/basic_19.wav"
+                               :DURATION '21.964293 :TOTAL-SAMPLES '1054286
+                               :SAMPLERATE '48000 :PEAK '0.24023687839508057d0
+                               :PEAK-INDEX '579368 :CENTROID
+                               '(779.7926727025056d0) :SPREAD
+                               '(888.0290881113499d0) :FLATNESS
+                               '(0.05587040202137223d0) :DOMINANT-FREQUENCY
+                               '(492.1897628865719d0) :FUNDAMENTAL-FREQUENCY
+                               '(493.65234) :SMOOTHNESS '0.7770054961076074d0
+                               :TRANSIENT '0.11442942259562473d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_18 :DATA 'NIL :NAME
+                               '"basic_18" :PATH
+                               '"/E/liminale/samples/basic/basic_18.wav"
+                               :DURATION '15.696438 :TOTAL-SAMPLES '753429
+                               :SAMPLERATE '48000 :PEAK '0.3346385955810547d0
+                               :PEAK-INDEX '723933 :CENTROID
+                               '(267.3363065234017d0) :SPREAD
+                               '(203.38492807882832d0) :FLATNESS
+                               '(0.06742216864812114d0) :DOMINANT-FREQUENCY
+                               '(216.81536806981703d0) :FUNDAMENTAL-FREQUENCY
+                               '(218.26172) :SMOOTHNESS '0.767872096812387d0
+                               :TRANSIENT '0.20106121623879453d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_17 :DATA 'NIL :NAME
+                               '"basic_17" :PATH
+                               '"/E/liminale/samples/basic/basic_17.wav"
+                               :DURATION '7.8214374 :TOTAL-SAMPLES '375429
+                               :SAMPLERATE '48000 :PEAK '0.2170337587594986d0
+                               :PEAK-INDEX '289638 :CENTROID
+                               '(268.7140695571707d0) :SPREAD
+                               '(266.1159693856446d0) :FLATNESS
+                               '(0.06027853015428963d0) :DOMINANT-FREQUENCY
+                               '(218.20176248036165d0) :FUNDAMENTAL-FREQUENCY
+                               '(219.72656) :SMOOTHNESS '0.7680210683725965d0
+                               :TRANSIENT '0.1910137056266918d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_16 :DATA 'NIL :NAME
+                               '"basic_16" :PATH
+                               '"/E/liminale/samples/basic/basic_16.wav"
+                               :DURATION '14.678562 :TOTAL-SAMPLES '704571
+                               :SAMPLERATE '48000 :PEAK '0.49308308959007263d0
+                               :PEAK-INDEX '598439 :CENTROID
+                               '(469.1151850835132d0) :SPREAD
+                               '(398.96811504328974d0) :FLATNESS
+                               '(0.0721404015729049d0) :DOMINANT-FREQUENCY
+                               '(144.8084656945184d0) :FUNDAMENTAL-FREQUENCY
+                               '(146.48438) :SMOOTHNESS '0.7729005063291009d0
+                               :TRANSIENT '0.14352690549130692d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_15 :DATA 'NIL :NAME
+                               '"basic_15" :PATH
+                               '"/E/liminale/samples/basic/basic_15.wav"
+                               :DURATION '12.910708 :TOTAL-SAMPLES '619714
+                               :SAMPLERATE '48000 :PEAK '0.1886024922132492d0
+                               :PEAK-INDEX '603413 :CENTROID
+                               '(319.8667701281109d0) :SPREAD
+                               '(430.732905135698d0) :FLATNESS
+                               '(0.050727819058540985d0) :DOMINANT-FREQUENCY
+                               '(218.3502240949989d0) :FUNDAMENTAL-FREQUENCY
+                               '(218.38802404054277d0) :SMOOTHNESS
+                               '0.7633623814481513d0 :TRANSIENT
+                               '0.17262462544982687d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_14 :DATA 'NIL :NAME
+                               '"basic_14" :PATH
+                               '"/E/liminale/samples/basic/basic_14.wav"
+                               :DURATION '13.821438 :TOTAL-SAMPLES '663429
+                               :SAMPLERATE '48000 :PEAK '0.21691204607486725d0
+                               :PEAK-INDEX '450752 :CENTROID
+                               '(238.53872487848787d0) :SPREAD
+                               '(138.23763573037328d0) :FLATNESS
+                               '(0.11715344565881997d0) :DOMINANT-FREQUENCY
+                               '(215.27249919106197d0) :FUNDAMENTAL-FREQUENCY
+                               '(216.79688) :SMOOTHNESS '0.7097871257797189d0
+                               :TRANSIENT '0.18983372017308828d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_13 :DATA 'NIL :NAME
+                               '"basic_13" :PATH
+                               '"/E/liminale/samples/basic/basic_13.wav"
+                               :DURATION '13.339292 :TOTAL-SAMPLES '640286
+                               :SAMPLERATE '48000 :PEAK '0.33030039072036743d0
+                               :PEAK-INDEX '493870 :CENTROID
+                               '(771.27901014034d0) :SPREAD
+                               '(788.260754134714d0) :FLATNESS
+                               '(0.18439131680323279d0) :DOMINANT-FREQUENCY
+                               '(345.8654951662503d0) :FUNDAMENTAL-FREQUENCY
+                               '(346.7788016498061d0) :SMOOTHNESS
+                               '0.7086352044775851d0 :TRANSIENT
+                               '0.1773277996030326d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_12 :DATA 'NIL :NAME
+                               '"basic_12" :PATH
+                               '"/E/liminale/samples/basic/basic_12.wav"
+                               :DURATION '20.732145 :TOTAL-SAMPLES '995143
+                               :SAMPLERATE '48000 :PEAK '0.004041953012347221d0
+                               :PEAK-INDEX '985170 :CENTROID
+                               '(387.95617957246924d0) :SPREAD
+                               '(397.00533338155503d0) :FLATNESS
+                               '(0.06537333403593125d0) :DOMINANT-FREQUENCY
+                               '(273.92347806566096d0) :FUNDAMENTAL-FREQUENCY
+                               '(275.39063) :SMOOTHNESS '0.7312190584694372d0
+                               :TRANSIENT '0.16140071223876692d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_11 :DATA 'NIL :NAME
+                               '"basic_11" :PATH
+                               '"/E/liminale/samples/basic/basic_11.wav"
+                               :DURATION '20.410707 :TOTAL-SAMPLES '979714
+                               :SAMPLERATE '48000 :PEAK '0.34983474016189575d0
+                               :PEAK-INDEX '523552 :CENTROID
+                               '(337.61168079778184d0) :SPREAD
+                               '(305.1298387586759d0) :FLATNESS
+                               '(0.04684036240155083d0) :DOMINANT-FREQUENCY
+                               '(230.074193888655d0) :FUNDAMENTAL-FREQUENCY
+                               '(230.97840355565876d0) :SMOOTHNESS
+                               '0.7648293789326162d0 :TRANSIENT
+                               '0.1548419347905764d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_10 :DATA 'NIL :NAME
+                               '"basic_10" :PATH
+                               '"/E/liminale/samples/basic/basic_10.wav"
+                               :DURATION '18.642855 :TOTAL-SAMPLES '894857
+                               :SAMPLERATE '48000 :PEAK '0.00357814016751945d0
+                               :PEAK-INDEX '877555 :CENTROID
+                               '(229.47251924363053d0) :SPREAD
+                               '(196.78279520669457d0) :FLATNESS
+                               '(0.04783640574454328d0) :DOMINANT-FREQUENCY
+                               '(193.14664323403656d0) :FUNDAMENTAL-FREQUENCY
+                               '(194.82422) :SMOOTHNESS '0.7139791209093588d0
+                               :TRANSIENT '0.18153837486058047d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_09 :DATA 'NIL :NAME
+                               '"basic_09" :PATH
+                               '"/E/liminale/samples/basic/basic_09.wav"
+                               :DURATION '18.428562 :TOTAL-SAMPLES '884571
+                               :SAMPLERATE '48000 :PEAK '8.864883566275239d-4
+                               :PEAK-INDEX '878154 :CENTROID
+                               '(490.07900077189214d0) :SPREAD
+                               '(456.28501206479126d0) :FLATNESS
+                               '(0.03482153420830299d0) :DOMINANT-FREQUENCY
+                               '(115.84543263573254d0) :FUNDAMENTAL-FREQUENCY
+                               '(116.20909886813213d0) :SMOOTHNESS
+                               '0.6820685119746155d0 :TRANSIENT
+                               '0.170434173972903d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_08 :DATA 'NIL :NAME
+                               '"basic_08" :PATH
+                               '"/E/liminale/samples/basic/basic_08.wav"
+                               :DURATION '24.589293 :TOTAL-SAMPLES '1180286
+                               :SAMPLERATE '48000 :PEAK '0.23831847310066223d0
+                               :PEAK-INDEX '8103 :CENTROID
+                               '(595.2658225470839d0) :SPREAD
+                               '(453.5238659138277d0) :FLATNESS
+                               '(0.045314717861041943d0) :DOMINANT-FREQUENCY
+                               '(348.6724142117558d0) :FUNDAMENTAL-FREQUENCY
+                               '(349.14776246937896d0) :SMOOTHNESS
+                               '0.6324034172902367d0 :TRANSIENT
+                               '0.1437360892383842d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_07 :DATA 'NIL :NAME
+                               '"basic_07" :PATH
+                               '"/E/liminale/samples/basic/basic_07.wav"
+                               :DURATION '12.75 :TOTAL-SAMPLES '612000
+                               :SAMPLERATE '48000 :PEAK '0.2934231460094452d0
+                               :PEAK-INDEX '533695 :CENTROID
+                               '(375.4937643105814d0) :SPREAD
+                               '(514.8780726219875d0) :FLATNESS
+                               '(0.06271846852739789d0) :DOMINANT-FREQUENCY
+                               '(153.74324560148028d0) :FUNDAMENTAL-FREQUENCY
+                               '(155.27344) :SMOOTHNESS '0.7070957902802105d0
+                               :TRANSIENT '0.14708295346066505d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_06 :DATA 'NIL :NAME
+                               '"basic_06" :PATH
+                               '"/E/liminale/samples/basic/basic_06.wav"
+                               :DURATION '19.714293 :TOTAL-SAMPLES '946286
+                               :SAMPLERATE '48000 :PEAK '0.3465644121170044d0
+                               :PEAK-INDEX '61646 :CENTROID
+                               '(214.30613812428533d0) :SPREAD
+                               '(149.33479687563923d0) :FLATNESS
+                               '(0.029936743996849403d0) :DOMINANT-FREQUENCY
+                               '(193.47839527608534d0) :FUNDAMENTAL-FREQUENCY
+                               '(194.11168405193953d0) :SMOOTHNESS
+                               '0.7446518308777075d0 :TRANSIENT
+                               '0.14255344221366748d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_05 :DATA 'NIL :NAME
+                               '"basic_05" :PATH
+                               '"/E/liminale/samples/basic/basic_05.wav"
+                               :DURATION '15.857146 :TOTAL-SAMPLES '761143
+                               :SAMPLERATE '48000 :PEAK '0.2643734812736511d0
+                               :PEAK-INDEX '427430 :CENTROID
+                               '(403.0419573962555d0) :SPREAD
+                               '(561.8843936390683d0) :FLATNESS
+                               '(0.07566763207903651d0) :DOMINANT-FREQUENCY
+                               '(174.24058292966265d0) :FUNDAMENTAL-FREQUENCY
+                               '(175.78125) :SMOOTHNESS '0.6894357761625044d0
+                               :TRANSIENT '0.1406062725939624d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_04 :DATA 'NIL :NAME
+                               '"basic_04" :PATH
+                               '"/E/liminale/samples/basic/basic_04.wav"
+                               :DURATION '19.553562 :TOTAL-SAMPLES '938571
+                               :SAMPLERATE '48000 :PEAK '0.2111606001853943d0
+                               :PEAK-INDEX '79338 :CENTROID
+                               '(429.72661622201923d0) :SPREAD
+                               '(495.14286935839647d0) :FLATNESS
+                               '(0.07738496952460999d0) :DOMINANT-FREQUENCY
+                               '(153.94046386955006d0) :FUNDAMENTAL-FREQUENCY
+                               '(154.5427142277262d0) :SMOOTHNESS
+                               '0.7568269208333417d0 :TRANSIENT
+                               '0.1321225943077936d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_03 :DATA 'NIL :NAME
+                               '"basic_03" :PATH
+                               '"/E/liminale/samples/basic/basic_03.wav"
+                               :DURATION '19.339293 :TOTAL-SAMPLES '928286
+                               :SAMPLERATE '48000 :PEAK '0.23392806947231293d0
+                               :PEAK-INDEX '193519 :CENTROID
+                               '(222.3263444248273d0) :SPREAD
+                               '(202.97159278954592d0) :FLATNESS
+                               '(0.0794136968449542d0) :DOMINANT-FREQUENCY
+                               '(130.4574371100664d0) :FUNDAMENTAL-FREQUENCY
+                               '(130.46172400688664d0) :SMOOTHNESS
+                               '0.73056546722429d0 :TRANSIENT
+                               '0.14738192099649822d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_02 :DATA 'NIL :NAME
+                               '"basic_02" :PATH
+                               '"/E/liminale/samples/basic/basic_02.wav"
+                               :DURATION '14.625 :TOTAL-SAMPLES '702000
+                               :SAMPLERATE '48000 :PEAK '0.25816553831100464d0
+                               :PEAK-INDEX '562957 :CENTROID
+                               '(397.164084703054d0) :SPREAD
+                               '(293.6003061114807d0) :FLATNESS
+                               '(0.06700125277232352d0) :DOMINANT-FREQUENCY
+                               '(306.2160469927547d0) :FUNDAMENTAL-FREQUENCY
+                               '(102.22743757566407d0) :SMOOTHNESS
+                               '0.6973269225910793d0 :TRANSIENT
+                               '0.17131893366339618d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'BASIC_01 :DATA 'NIL :NAME
+                               '"basic_01" :PATH
+                               '"/E/liminale/samples/basic/basic_01.wav"
+                               :DURATION '14.035708 :TOTAL-SAMPLES '673714
+                               :SAMPLERATE '48000 :PEAK '0.06209690868854523d0
+                               :PEAK-INDEX '659939 :CENTROID
+                               '(542.56829557705d0) :SPREAD
+                               '(424.9682697977466d0) :FLATNESS
+                               '(0.07285235113495618d0) :DOMINANT-FREQUENCY
+                               '(96.71245464497473d0) :FUNDAMENTAL-FREQUENCY
+                               '(98.14453) :SMOOTHNESS '0.7614130383331069d0
+                               :TRANSIENT '0.18140668270167765d0))) 

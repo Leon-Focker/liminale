@@ -1,0 +1,129 @@
+
+(MAKE-INSTANCE 'SOUNDPILE :ID 'ACCORDION :DATA
+               (LIST
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_10 :DATA 'NIL :NAME
+                               '"double_10" :PATH
+                               '"/E/liminale/samples/double/double_10.wav"
+                               :DURATION '16.071438 :TOTAL-SAMPLES '771429
+                               :SAMPLERATE '48000 :PEAK '0.14553873240947723d0
+                               :PEAK-INDEX '597461 :CENTROID
+                               '(1110.9275907107244d0) :SPREAD
+                               '(151.3118563817562d0) :FLATNESS
+                               '(0.1182529961201854d0) :DOMINANT-FREQUENCY
+                               '(1101.6667686103347d0) :FUNDAMENTAL-FREQUENCY
+                               '(1102.5423434000284d0) :SMOOTHNESS
+                               '0.7366393829200211d0 :TRANSIENT
+                               '0.19965995610111126d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_09 :DATA 'NIL :NAME
+                               '"double_09" :PATH
+                               '"/E/liminale/samples/double/double_09.wav"
+                               :DURATION '15.0 :TOTAL-SAMPLES '720000
+                               :SAMPLERATE '48000 :PEAK '0.2880992591381073d0
+                               :PEAK-INDEX '311985 :CENTROID
+                               '(1102.6368726201404d0) :SPREAD
+                               '(488.47825220792424d0) :FLATNESS
+                               '(0.05886797678607476d0) :DOMINANT-FREQUENCY
+                               '(1044.4268551666744d0) :FUNDAMENTAL-FREQUENCY
+                               '(1045.546212852059d0) :SMOOTHNESS
+                               '0.5904079426671943d0 :TRANSIENT
+                               '0.1612318845772533d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_08 :DATA 'NIL :NAME
+                               '"double_08" :PATH
+                               '"/E/liminale/samples/double/double_08.wav"
+                               :DURATION '16.285707 :TOTAL-SAMPLES '781714
+                               :SAMPLERATE '48000 :PEAK '0.001116714789532125d0
+                               :PEAK-INDEX '774390 :CENTROID
+                               '(842.241261977436d0) :SPREAD
+                               '(573.8463511688134d0) :FLATNESS
+                               '(0.04082746012359189d0) :DOMINANT-FREQUENCY
+                               '(559.2750500671692d0) :FUNDAMENTAL-FREQUENCY
+                               '(551.6037355389042d0) :SMOOTHNESS
+                               '0.7055754158822793d0 :TRANSIENT
+                               '0.12842726575207233d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_07 :DATA 'NIL :NAME
+                               '"double_07" :PATH
+                               '"/E/liminale/samples/double/double_07.wav"
+                               :DURATION '18.857145 :TOTAL-SAMPLES '905143
+                               :SAMPLERATE '48000 :PEAK '0.031035829335451126d0
+                               :PEAK-INDEX '884339 :CENTROID
+                               '(1154.0423355269031d0) :SPREAD
+                               '(614.7548162196447d0) :FLATNESS
+                               '(0.08149004541478781d0) :DOMINANT-FREQUENCY
+                               '(780.7550067986413d0) :FUNDAMENTAL-FREQUENCY
+                               '(781.5032677569108d0) :SMOOTHNESS
+                               '0.7942899382456426d0 :TRANSIENT
+                               '0.21817701618978097d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_06 :DATA 'NIL :NAME
+                               '"double_06" :PATH
+                               '"/E/liminale/samples/double/double_06.wav"
+                               :DURATION '16.553562 :TOTAL-SAMPLES '794571
+                               :SAMPLERATE '48000 :PEAK '0.5449075698852539d0
+                               :PEAK-INDEX '16223 :CENTROID
+                               '(617.815373094809d0) :SPREAD
+                               '(639.7878197481048d0) :FLATNESS
+                               '(0.04163599574603917d0) :DOMINANT-FREQUENCY
+                               '(351.6979814825871d0) :FUNDAMENTAL-FREQUENCY
+                               '(352.29788080641197d0) :SMOOTHNESS
+                               '0.7220701598575884d0 :TRANSIENT
+                               '0.30774747380703055d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_05 :DATA 'NIL :NAME
+                               '"double_05" :PATH
+                               '"/E/liminale/samples/double/double_05.wav"
+                               :DURATION '17.464293 :TOTAL-SAMPLES '838286
+                               :SAMPLERATE '48000 :PEAK '0.5129227638244629d0
+                               :PEAK-INDEX '550499 :CENTROID
+                               '(571.5934901862391d0) :SPREAD
+                               '(741.2382496355738d0) :FLATNESS
+                               '(0.05647111915678508d0) :DOMINANT-FREQUENCY
+                               '(260.5471280770456d0) :FUNDAMENTAL-FREQUENCY
+                               '(262.20703) :SMOOTHNESS '0.6830967103973822d0
+                               :TRANSIENT '0.2245330686511176d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_04 :DATA 'NIL :NAME
+                               '"double_04" :PATH
+                               '"/E/liminale/samples/double/double_04.wav"
+                               :DURATION '13.339292 :TOTAL-SAMPLES '640286
+                               :SAMPLERATE '48000 :PEAK '0.3891525864601135d0
+                               :PEAK-INDEX '89645 :CENTROID
+                               '(200.92488699107324d0) :SPREAD
+                               '(85.41838510283051d0) :FLATNESS
+                               '(0.027005850745883176d0) :DOMINANT-FREQUENCY
+                               '(194.63786131314055d0) :FUNDAMENTAL-FREQUENCY
+                               '(196.28906) :SMOOTHNESS '0.4824961655694499d0
+                               :TRANSIENT '0.19600483412692196d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_03 :DATA 'NIL :NAME
+                               '"double_03" :PATH
+                               '"/E/liminale/samples/double/double_03.wav"
+                               :DURATION '16.392855 :TOTAL-SAMPLES '786857
+                               :SAMPLERATE '48000 :PEAK '0.34166082739830017d0
+                               :PEAK-INDEX '530847 :CENTROID
+                               '(747.4096894191274d0) :SPREAD
+                               '(871.143556069214d0) :FLATNESS
+                               '(0.043423517498733105d0) :DOMINANT-FREQUENCY
+                               '(438.06962115777117d0) :FUNDAMENTAL-FREQUENCY
+                               '(438.573474748057d0) :SMOOTHNESS
+                               '0.7044230464101494d0 :TRANSIENT
+                               '0.15716394750562268d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_02 :DATA 'NIL :NAME
+                               '"double_02" :PATH
+                               '"/E/liminale/samples/double/double_02.wav"
+                               :DURATION '19.821438 :TOTAL-SAMPLES '951429
+                               :SAMPLERATE '48000 :PEAK '0.10321758687496185d0
+                               :PEAK-INDEX '938059 :CENTROID
+                               '(646.8878599155081d0) :SPREAD
+                               '(716.9263549762655d0) :FLATNESS
+                               '(0.038408008533954575d0) :DOMINANT-FREQUENCY
+                               '(352.6803793141348d0) :FUNDAMENTAL-FREQUENCY
+                               '(354.4922) :SMOOTHNESS '0.8068377193099829d0
+                               :TRANSIENT '0.21250610466871728d0)
+                (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_01 :DATA 'NIL :NAME
+                               '"double_01" :PATH
+                               '"/E/liminale/samples/double/double_01.wav"
+                               :DURATION '6.5357084 :TOTAL-SAMPLES '313714
+                               :SAMPLERATE '48000 :PEAK '0.3255445957183838d0
+                               :PEAK-INDEX '286098 :CENTROID
+                               '(895.6696405607178d0) :SPREAD
+                               '(982.413928334728d0) :FLATNESS
+                               '(0.02871957080359875d0) :DOMINANT-FREQUENCY
+                               '(521.5193740776708d0) :FUNDAMENTAL-FREQUENCY
+                               '(262.20703) :SMOOTHNESS '0.7565114541885453d0
+                               :TRANSIENT '0.17123207272015026d0))) 

@@ -4,18 +4,18 @@
 
 ;; ** Sounds
 
-(defparameter *rain* "/E/liminale/samples/hagel.wav")
+(defparameter *rain* (liminale-path "samples/hagel.wav"))
 
-(defparameter *hail* "/E/liminale/samples/regen.wav")
+(defparameter *hail* (liminale-path "samples/regen.wav"))
 
-(defparameter *noise* "/E/liminale/samples/pinknoise.wav")
+(defparameter *noise* (liminale-path "samples/pinknoise.wav"))
 
 (defparameter *acc-samples-double*
   (let ((text-file (liminale-path "acc-samples-double.txt")))
     (if (probe-file text-file)
 	(load-from-file text-file)
 	(let ((sp (soundpile-from-folder
-		   'accordion "/E/liminale/samples/double/" :analyse t)))
+		   'accordion (liminale-path "samples/double/") :analyse t)))
 	  (store-in-text-file sp text-file)
 	  sp))))
 
@@ -24,7 +24,7 @@
     (if (probe-file text-file)
 	(load-from-file text-file)
 	(let ((sp (soundpile-from-folder
-		   'accordion "/E/liminale/samples/basic/" :analyse t)))
+		   'accordion (liminale-path "samples/basic/") :analyse t)))
 	  (store-in-text-file sp text-file)
 	  sp))))
 

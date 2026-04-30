@@ -124,8 +124,7 @@
 			 (clm::splinter file 0
 					:channel 0
 					:duration duration
-					:grain-env (list 0 (dry-wet 5 0.3 vel)
-							 100 (dry-wet 5 0.3 vel))
+					:grain-env (list 0 5  100 5)
 					:center-deviation-env '(0 1  100 1)
 					:voices 10
 					:srt 0.8
@@ -136,7 +135,7 @@
 					:amp-env-base 0.5
 					))))
 	(clm::moog splint start
-		   :amp (* 1 (+ 0.1 (* 0.4 vel)))
+		   :amp (* 0.5 (+ 0.1 (* 0.4 vel)))
 		   ;; :amp-env amp-env
 		   :moog t
 		   :duration duration

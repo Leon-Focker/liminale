@@ -23,7 +23,7 @@
   (wsoundmp3 "liminale_test_bin_quiet_one_sine" 2
     (progn
       (loop for i from 0
-	    for note in (generate-notes 1000 '(:pad :contemplative :noise))
+	    for note in (generate-notes 10 '(:pad :contemplative :noise))
 	    collect (case (note-type note)
 		      (:pad
 		       (setf (note-freq note) (/ (note-freq note) 2))

@@ -115,31 +115,33 @@
   (let* ((start (/ (note-start note) 1000.0))
 	 (duration (/ (note-duration note) 1000.0))
 	 (vel (note-velocity note)))
-    (clm::sound-let
-	((splint (:statistics nil)
-		 (loop for file in (list *rain* *hail* *noise*)
-		       for amp in (list vel (- 1.0 vel) 0.05)
-		       append 
-		       (clm::splinter file 0
-				      :channel 0
-				      :duration duration
-				      :grain-env (list 0 (dry-wet 5 0.3 vel)  100 (dry-wet 5 0.3 vel))
-				      :center-deviation-env '(0 1  100 1)
-				      :voices 10
-				      :srt 0.8
-				      :amp amp
-				      :ramp 100000
-				      ;;:silence-env '(0 1  40 0  60 0.3  100 1)
-				      :amp-env '(0 0  30 1  70 1  100 0)
-				      :amp-env-base 0.5
-				      ))))
-      (clm::moog splint start
-		 :amp (* 1 (+ 0.1 (* 0.4 vel)))
-		 ;; :amp-env amp-env
-		 :moog t
-		 :duration duration
-		 :res-env '(0 0 1 0)
-		 :freq-env '(0 1000  30 5000  75 5000  100 1000)
-		 :freq-env-expt 8))))
+    (when (> vel 0)
+      (clm::sound-let
+	  ((splint (:statistics nil)
+		   (loop for file in (list *rain* *hail* *noise*)
+			 for amp in (list vel (- 1.0 vel) 0.05)
+			 append 
+			 (clm::splinter file 0
+					:channel 0
+					:duration duration
+					:grain-env (list 0 (dry-wet 5 0.3 vel)
+							 100 (dry-wet 5 0.3 vel))
+					:center-deviation-env '(0 1  100 1)
+					:voices 10
+					:srt 0.8
+					:amp amp
+					:ramp 100000
+					;;:silence-env '(0 1  40 0  60 0.3  100 1)
+					:amp-env '(0 0  30 1  70 1  100 0)
+					:amp-env-base 0.5
+					))))
+	(clm::moog splint start
+		   :amp (* 1 (+ 0.1 (* 0.4 vel)))
+		   ;; :amp-env amp-env
+		   :moog t
+		   :duration duration
+		   :res-env '(0 0 1 0)
+		   :freq-env '(0 1000  30 5000  75 5000  100 1000)
+		   :freq-env-expt 8)))))
 
 ;; EOF synths.lsp

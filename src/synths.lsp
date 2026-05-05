@@ -105,7 +105,7 @@
 			   :freq-env-expt 8)
 			  (clm::sine 0 duration (* mult freq) amp :amp-env amp-env)))))
     (clm::simple-echo moog-sound start
-		      :delay (note-delay-time note)
+		      :delay (scale-until-in-range (/ (note-duration note) 1000) 0.2 0.45 3)
 		      :feedback 0.7
 		      :time-after 5))))
 

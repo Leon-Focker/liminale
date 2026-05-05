@@ -68,7 +68,6 @@
 			  :type :contemplative
 			  ;; between 0.0 and 0.75
 			  :velocity (* (get-mod-value (density-mod :pad) time t) 0.75)
-			  :delay-time (scale-until-in-range (/ duration 1000) 0.2 0.45 3)
 			  :freq (apply #'get-new-frequency
 				       :contemplative
 				       (mapcar #'note-freq

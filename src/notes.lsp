@@ -11,8 +11,7 @@
   (freq 440 :type number)		; in Hz
   (velocity 0.7 :type number)		; 0-1
   (time-left 0 :type integer)           ; in miliseconds
-  (type 'pad)                           ; which role this note plays
-  (delay-time 0.5 :type number))        ; delay time, only applies to some sounds
+  (type :pad))                          ; which role this note plays
 
 
 ;; ** generation

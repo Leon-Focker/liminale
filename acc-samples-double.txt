@@ -3,7 +3,7 @@
                (LIST
                 (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_10 :DATA 'NIL :NAME
                                '"double_10" :PATH
-                               '"/E/liminale/samples/double/double_10.wav"
+                               '"/home/leon/quicklisp/local-projects/liminale/samples/double/double_10.wav"
                                :DURATION '16.071438 :TOTAL-SAMPLES '771429
                                :SAMPLERATE '48000 :PEAK '0.14553873240947723d0
                                :PEAK-INDEX '597461 :CENTROID
@@ -16,7 +16,7 @@
                                '0.19965995610111126d0)
                 (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_09 :DATA 'NIL :NAME
                                '"double_09" :PATH
-                               '"/E/liminale/samples/double/double_09.wav"
+                               '"/home/leon/quicklisp/local-projects/liminale/samples/double/double_09.wav"
                                :DURATION '15.0 :TOTAL-SAMPLES '720000
                                :SAMPLERATE '48000 :PEAK '0.2880992591381073d0
                                :PEAK-INDEX '311985 :CENTROID
@@ -29,7 +29,7 @@
                                '0.1612318845772533d0)
                 (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_08 :DATA 'NIL :NAME
                                '"double_08" :PATH
-                               '"/E/liminale/samples/double/double_08.wav"
+                               '"/home/leon/quicklisp/local-projects/liminale/samples/double/double_08.wav"
                                :DURATION '16.285707 :TOTAL-SAMPLES '781714
                                :SAMPLERATE '48000 :PEAK '0.001116714789532125d0
                                :PEAK-INDEX '774390 :CENTROID
@@ -42,7 +42,7 @@
                                '0.12842726575207233d0)
                 (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_07 :DATA 'NIL :NAME
                                '"double_07" :PATH
-                               '"/E/liminale/samples/double/double_07.wav"
+                               '"/home/leon/quicklisp/local-projects/liminale/samples/double/double_07.wav"
                                :DURATION '18.857145 :TOTAL-SAMPLES '905143
                                :SAMPLERATE '48000 :PEAK '0.031035829335451126d0
                                :PEAK-INDEX '884339 :CENTROID
@@ -55,7 +55,7 @@
                                '0.21817701618978097d0)
                 (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_06 :DATA 'NIL :NAME
                                '"double_06" :PATH
-                               '"/E/liminale/samples/double/double_06.wav"
+                               '"/home/leon/quicklisp/local-projects/liminale/samples/double/double_06.wav"
                                :DURATION '16.553562 :TOTAL-SAMPLES '794571
                                :SAMPLERATE '48000 :PEAK '0.5449075698852539d0
                                :PEAK-INDEX '16223 :CENTROID
@@ -68,7 +68,7 @@
                                '0.30774747380703055d0)
                 (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_05 :DATA 'NIL :NAME
                                '"double_05" :PATH
-                               '"/E/liminale/samples/double/double_05.wav"
+                               '"/home/leon/quicklisp/local-projects/liminale/samples/double/double_05.wav"
                                :DURATION '17.464293 :TOTAL-SAMPLES '838286
                                :SAMPLERATE '48000 :PEAK '0.5129227638244629d0
                                :PEAK-INDEX '550499 :CENTROID
@@ -80,7 +80,7 @@
                                :TRANSIENT '0.2245330686511176d0)
                 (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_04 :DATA 'NIL :NAME
                                '"double_04" :PATH
-                               '"/E/liminale/samples/double/double_04.wav"
+                               '"/home/leon/quicklisp/local-projects/liminale/samples/double/double_04.wav"
                                :DURATION '13.339292 :TOTAL-SAMPLES '640286
                                :SAMPLERATE '48000 :PEAK '0.3891525864601135d0
                                :PEAK-INDEX '89645 :CENTROID
@@ -92,7 +92,7 @@
                                :TRANSIENT '0.19600483412692196d0)
                 (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_03 :DATA 'NIL :NAME
                                '"double_03" :PATH
-                               '"/E/liminale/samples/double/double_03.wav"
+                               '"/home/leon/quicklisp/local-projects/liminale/samples/double/double_03.wav"
                                :DURATION '16.392855 :TOTAL-SAMPLES '786857
                                :SAMPLERATE '48000 :PEAK '0.34166082739830017d0
                                :PEAK-INDEX '530847 :CENTROID
@@ -105,7 +105,7 @@
                                '0.15716394750562268d0)
                 (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_02 :DATA 'NIL :NAME
                                '"double_02" :PATH
-                               '"/E/liminale/samples/double/double_02.wav"
+                               '"/home/leon/quicklisp/local-projects/liminale/samples/double/double_02.wav"
                                :DURATION '19.821438 :TOTAL-SAMPLES '951429
                                :SAMPLERATE '48000 :PEAK '0.10321758687496185d0
                                :PEAK-INDEX '938059 :CENTROID
@@ -117,7 +117,7 @@
                                :TRANSIENT '0.21250610466871728d0)
                 (MAKE-INSTANCE 'SOUNDFILE :ID 'DOUBLE_01 :DATA 'NIL :NAME
                                '"double_01" :PATH
-                               '"/E/liminale/samples/double/double_01.wav"
+                               '"/home/leon/quicklisp/local-projects/liminale/samples/double/double_01.wav"
                                :DURATION '6.5357084 :TOTAL-SAMPLES '313714
                                :SAMPLERATE '48000 :PEAK '0.3255445957183838d0
                                :PEAK-INDEX '286098 :CENTROID

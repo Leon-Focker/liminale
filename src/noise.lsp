@@ -5,8 +5,8 @@
 (define-note-type :noise
   :min-freq 110
   :max-freq 1234
-  :min-duration 120000
-  :max-duration 300000
+  :min-duration 200000
+  :max-duration 420000
   )
 
 ;; *** generate-new-notes

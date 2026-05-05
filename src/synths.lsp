@@ -75,13 +75,12 @@
 
 ;; ** pluck
 (defun pluck (note &optional (i 0))
+  (declare (ignore i))
   (let* ((amp (/ (note-velocity note) 15))
 	 (start (/ (note-start note) 1000.0))
 	 (duration 0.5)
 	 (freq (note-freq note))
-	 (sounds (find-sounds-with-sufficient-dur
-		  duration freq *acc-samples-basic*))
-	 (sound (nth-mod i sounds))
+	 (sound (first (data *acc-samples-basic*)))
 	 (sound-freq (car (fundamental-frequency sound)))
 	 (base-srt (/ freq sound-freq))
 	 (amp-env '(0 1  100 0)))

@@ -175,7 +175,7 @@
 ;; ** midi
 
 ;; *** notes-to-midi
-(defun notes-to-midi (note-list file)
+(defun notes-to-midi (note-list file &optional (tempo 60))
   (test-note-list note-list "notes-to-midi")
   (let ((pitches '())
 	(durs '())
@@ -188,7 +188,8 @@
 	  do (push (note-velocity note) velos))
     (lists-to-midi pitches durs starts
 		   :velocity-list velos
-		   :file file)))
+		   :file file
+		   :tempo tempo)))
 
 
 ;; EOF notes.lsp

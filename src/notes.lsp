@@ -155,11 +155,12 @@
 
 ;; *** playing-at-time
 ;;; time in ms
-(defun playing-at-time (list-of-notes time)
+(defun playing-at-time (list-of-notes time &optional (duration 0))
   (loop for note in list-of-notes
 	for start = (note-start note)
 	for end = (+ start (note-duration note))
-	when (<= start time end) collect note))
+	for range-end = (+ time duration)
+	when (and (<= start range-end) (<= time end)) collect note))
 
 
 ;; ** tests

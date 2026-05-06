@@ -28,6 +28,14 @@
   )
 
 ;; *** generate-new-notes
+(defmethod get-new-note ((type (eql :pad)) time
+			 &key freqs &allow-other-keys)
+  (make-note :start time
+	     :type type
+	     :duration (get-new-duration type)
+	     :velocity (get-mod-value (vel-mod type) time)
+	     :freq (apply #'get-new-frequency type freqs)))
+
 ;;; Given a list of currently playing pad notes, which notes should additionally
 ;;; start to play? Return additional notes as a list.
 (defmethod generate-new-notes ((type (eql :pad)) time
@@ -41,13 +49,9 @@
 	 (checks-per-minute (/ 1 (/ *liminale-grid-mseconds* 1000 60)))
 	 (chance-per-check-1 (/ chance-per-minute-1 checks-per-minute))
 	 (chance-per-check-2 (/ chance-per-minute-2 checks-per-minute))
-	 (new-note
-	   (make-note :start time
-		      :type :pad
-		      :duration (get-new-duration :pad)
-		      :velocity (get-mod-value (vel-mod :pad) time)
-		      :freq (apply #'get-new-frequency :pad
-				   (mapcar #'note-freq active-pad-notes)))))
+	 (new-note (get-new-note :pad
+				 time
+				 :freqs (mapcar #'note-freq active-pad-notes))))
     (case (length active-pad-notes)
       ((0 1 2)
        (cons new-note

@@ -12,6 +12,14 @@
 ;; *** generate-new-notes
 ;;; Given a list of currently playing noisy notes, which notes should 
 ;;; additionally start to play? Return additional notes as a list.
+(defmethod get-new-note ((type (eql :noise)) time
+			 &key silent &allow-other-keys)
+  (make-note :start time
+	     :type type
+	     :freq 0
+	     :duration (get-new-duration type)
+	     :velocity (if silent 0 (+ 0.5 (* 0.5 (random-liminale))))))
+
 (let ((last-played? t))
   (defmethod generate-new-notes ((type (eql :noise)) time
 				 &key active-notes
@@ -19,14 +27,7 @@
     (when (<= time 0) (setf last-played? t))
     (let ((note-list (remove-if-not #'is-noise active-notes)))
       (when (null note-list)
-	(prog1 (list
-		(make-note :freq 0
-			   :start time
-			   :duration (get-new-duration :noise)
-			   :type :noise
-			   :velocity (if last-played?
-					 0
-					 (+ 0.5 (* 0.5 (random-liminale))))))
+	(prog1 (list (get-new-note type time :silent last-played?))
 	  (setf last-played? (not last-played?)))))))
 
 ;; *** get-new-duration

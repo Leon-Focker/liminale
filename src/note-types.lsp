@@ -39,18 +39,22 @@
 
 ;; *** generation
 
-(defgeneric reset-note-type (type &key &allow-other-keys))
+(defmethod reset-note-type (type &key &allow-other-keys))
 
 (defmethod reset-note-type :before (type &key verbose &allow-other-keys)
   (when verbose (format t "~&Resetting ~a" type)))
 
-(defmethod generate-new-notes (type time &key &allow-other-keys) '())
+(defmethod generate-new-notes (type time &key &allow-other-keys)
+  (list (get-new-note type time)))
 ;;; this :around method acts as a check for the result of all generate-new-notes
 (defmethod generate-new-notes :around (type time &key verbose &allow-other-keys)
   (when verbose (format t "~&Generating new ~a notes..." type))
   (let ((result (call-next-method)))
     (test-note-list result (format nil "generate-new-notes with type ~a" type))
     result))
+
+(defmethod get-new-note (type time &key &allow-other-keys)
+  (make-note :start time :type type))
 
 (defmethod get-new-duration (type &rest durs)
   (get-new-duration-aux type durs))

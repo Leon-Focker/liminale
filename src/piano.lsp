@@ -51,6 +51,14 @@
 ;;  '(2/5 4/7))
 
 ;; *** generate-new-notes
+(defmethod get-new-note ((type (eql :piano-chords)) time
+			       &key durs freqs &allow-other-keys)
+  (make-note :start time
+	     :type type
+	     :duration (apply #'get-new-duration type durs)
+	     :velocity 0.7
+	     :freq (apply #'get-new-frequency type freqs)))
+
 (defmethod generate-new-notes ((type (eql :piano-chords)) time
 			       &key active-notes
 			       &allow-other-keys)
@@ -58,11 +66,7 @@
     ((0 1 2 3 4 5 6)
      (let* ((durs (mapcar #'note-duration active-notes))
 	    (freqs (mapcar #'note-freq active-notes))
- 	    (new-note (make-note :start time
-				 :type type
-				 :duration (apply #'get-new-duration type durs)
-				 :velocity 0.7
-				 :freq (apply #'get-new-frequency type freqs))))
+ 	    (new-note (get-new-note type time :durs durs :freqs freqs)))
        (cons new-note
 	     (generate-new-notes :piano-chords time
 				 :active-notes (cons new-note active-notes)))))))

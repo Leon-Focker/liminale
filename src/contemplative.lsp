@@ -13,12 +13,20 @@
   :remember-n-last-notes 20
   :init-dur 500
   :freq-ratios '(1 2 3 4 6 8)
-  )
+  :nr-of-reps 0
+  :last-was-pause nil)
 
 (define-note-type :contemplative-pause
   :min-duration 5000
   :max-duration 25000
   )
+
+;; *** get-new-duration
+(defmethod get-new-duration ((type (eql :contemplative)) &rest durs)
+  (if (last-was-pause type)
+      (get-new-duration-aux type durs)
+      (let ((last-dur (car (get-last-durs type))))
+	(progn (add-last-dur type last-dur) last-dur))))
 
 ;; *** get-new-frequency
 (defmethod get-new-frequency ((type (eql :contemplative)) &rest freqs)
@@ -63,54 +71,45 @@
   (and (is-pad note)
        (<= 6 (- (note-duration note) (note-time-left note)))))
 
-(let ((last-was-pause nil)
-      (nr-of-reps 0))
-
-  (defmethod generate-new-notes ((type (eql :contemplative))
-				 time
-				 &rest keys
-				 &key active-notes
-				 &allow-other-keys)
-    (when (<= time 0) (setf last-was-pause nil nr-of-reps 0))
-    (let ((contemplative-notes (remove-if-not #'is-contemplative active-notes))
-	  (pause-notes (remove-if-not #'is-contemplative-pause active-notes))
-	  (pad-notes (remove-if-not #'is-older-pad active-notes)))
-      (unless (append contemplative-notes pause-notes)
-	(if last-was-pause
-	    ;; generate :contemplative notes
-	    (prog1
-		(list
-		 (apply #'get-new-note type time
-			:freqs (mapcar #'note-freq
-				       (append contemplative-notes
-					       pad-notes))
-			keys))
-	      (incf nr-of-reps)
-	      ;; determines number of short notes after another
-	      (when (< (random-liminale) (* nr-of-reps 0.08))
-		(setf last-was-pause nil
-		      nr-of-reps 0)))
-	    ;; generate :contemplative-pause notes
-	    (apply #'generate-new-notes :contemplative-pause time keys)))))
+(defmethod generate-new-notes ((type (eql :contemplative))
+			       time
+			       &rest keys
+			       &key active-notes
+			       &allow-other-keys)
+  (let ((contemplative-notes (remove-if-not #'is-contemplative active-notes))
+	(pause-notes (remove-if-not #'is-contemplative-pause active-notes))
+	(pad-notes (remove-if-not #'is-older-pad active-notes)))
+    (unless (append contemplative-notes pause-notes)
+      (if (last-was-pause type)
+	  ;; generate :contemplative notes
+	  (prog1
+	      (list
+	       (apply #'get-new-note type time
+		      :freqs (mapcar #'note-freq
+				     (append contemplative-notes
+					     pad-notes))
+		      keys))
+	    (incf (nr-of-reps type))
+	    ;; determines number of short notes after another
+	    (when (< (random-liminale) (* (nr-of-reps type) 0.08))
+	      (setf (last-was-pause type) nil
+		    (nr-of-reps type) 0)))
+	  ;; generate :contemplative-pause notes
+	  (apply #'generate-new-notes :contemplative-pause time keys)))))
   
-  (defmethod generate-new-notes ((type (eql :contemplative-pause)) time
-				 &rest keys
-				 &key &allow-other-keys)
-    (setf last-was-pause t)
-    (list (apply #'get-new-note :contemplative-pause time keys)))
-
-  ;; *** get-new-duration
-  (defmethod get-new-duration ((type (eql :contemplative)) &rest durs)
-    (if last-was-pause
-	(get-new-duration-aux type durs)
-	(let ((last-dur (car (get-last-durs type))))
-	  (progn (add-last-dur type last-dur) last-dur)))))
+(defmethod generate-new-notes ((type (eql :contemplative-pause)) time
+			       &rest keys
+			       &key &allow-other-keys)
+  (setf (last-was-pause :contemplative) t)
+  (list (apply #'get-new-note :contemplative-pause time keys)))
 
 ;; *** reset
 ;;; becasue :contemplative also calls :contemplative-pause, we need this hook
 ;;; to reset the latter:
 (defmethod reset-note-type :after ((type (eql :contemplative))
 				   &key &allow-other-keys)
+(setf (nr-of-reps type) 0)
+(setf (last-was-pause type) nil)
   (reset-note-type :contemplative-pause))
 
 ;; EOF contemplative.lsp

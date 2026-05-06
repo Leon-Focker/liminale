@@ -33,16 +33,16 @@
 ;; *** srb-get-all
 ;;; get all values in the ringbuffer, starting with the most recent one
 (defun srb-get-all (srb)
-  (loop for idx from (1+ (simple-ringbuffer-idx srb))
+  (loop for idx downfrom (simple-ringbuffer-idx srb)
 	repeat (simple-ringbuffer-size srb)
 	collect (aref (simple-ringbuffer-data srb)
 		      (mod idx (simple-ringbuffer-size srb)))))
 
 (defun srb-add-value (srb value)
-  (setf (aref (simple-ringbuffer-data srb) (simple-ringbuffer-idx srb))
-	value
-	(simple-ringbuffer-idx srb)
-	(mod (1+ (simple-ringbuffer-idx srb)) (simple-ringbuffer-size srb))))
+  (setf (simple-ringbuffer-idx srb)
+	(mod (1+ (simple-ringbuffer-idx srb)) (simple-ringbuffer-size srb))
+	(aref (simple-ringbuffer-data srb) (simple-ringbuffer-idx srb))
+	value))
 
 (let ((test (make-simple-ringbuffer 4)))
   (srb-add-value test 8)

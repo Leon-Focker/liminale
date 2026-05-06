@@ -28,8 +28,9 @@
 ;;;   Unknown types will just use the generic methods for generation.
 ;;; - reset-liminale: bool, whether to reset the random-number generator at the start.
 ;;; - verbose: when t, print a lot of stuff.
-(defun generate-notes (duration
-		       &optional (note-types '(:pad)) (reset-liminale t) verbose)
+(defun generate-notes (duration note-types
+		       &rest keys
+		       &key (reset-liminale t) verbose &allow-other-keys)
   (when reset-liminale
     (reset-random-liminale)
     (loop for type in note-types do (reset-note-type type)))
@@ -52,12 +53,13 @@
 	    do (mapcar #'(lambda (note)
 			   (push note active-notes)
 			   (push note note-list))
-		       (generate-new-notes
-			note-type
-			time
-			:active-notes active-notes
-			:note-list note-list
-			:verbose verbose)))
+		       (apply #'generate-new-notes
+			      note-type
+			      time
+			      :active-notes active-notes
+			      :note-list note-list
+			      :verbose verbose
+			      keys)))
       ;; step forward in time 
       (incf time *liminale-grid-mseconds*))
     note-list))

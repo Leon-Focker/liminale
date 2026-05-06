@@ -11,7 +11,8 @@
   (freq 440 :type number)		; in Hz
   (velocity 0.7 :type number)		; 0-1
   (time-left 0 :type integer)           ; in miliseconds
-  (type :pad))                          ; which role this note plays
+  (type :pad)                           ; which role this note plays
+  (debug '()))
 
 
 ;; ** generation
@@ -85,6 +86,8 @@
 	    when derivatives do (push derivatives options))
       ;; filter options
       (setf similar-options (filter-similar-options options similar-dur-percent))
+      ;; debugging
+      (liminale-log (list 'similar-dur-options similar-options))
       ;; try and pick the most original frequency
       (setf
        similar-options
@@ -141,6 +144,8 @@
 	  when derivatives do (push derivatives options))
     ;; filter options
     (setf similar-options (filter-similar-options options similar-freq-percent))
+    ;; debugging
+    (liminale-log (list 'similar-freq-options similar-options))
     ;; try and pick the most original frequency
     (setf
      similar-options

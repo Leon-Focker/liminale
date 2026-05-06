@@ -27,47 +27,6 @@
   :density-mod (get-cut-off-sine-modulator 500 0.2 0.5 -0.2)
   )
 
-;; *** generate-new-notes
-(defmethod get-new-note ((type (eql :pad)) time
-			 &key freqs &allow-other-keys)
-  (make-note :start time
-	     :type type
-	     :duration (get-new-duration type)
-	     :velocity (get-mod-value (vel-mod type) time)
-	     :freq (apply #'get-new-frequency type freqs)))
-
-;;; Given a list of currently playing pad notes, which notes should additionally
-;;; start to play? Return additional notes as a list.
-(defmethod generate-new-notes ((type (eql :pad)) time
-			       &key active-notes
-			       &allow-other-keys)
-  (let* ((active-pad-notes (remove-if-not #'is-pad active-notes))
-	 (density-mod-val (get-mod-value (density-mod :pad) time t))
-	 (density-mult-from-mod (1+ (* -1 5 density-mod-val)))
-	 (chance-per-minute-1 (* 3 density-mult-from-mod))
-	 (chance-per-minute-2 (* 0.6 density-mult-from-mod))
-	 (checks-per-minute (/ 1 (/ *liminale-grid-mseconds* 1000 60)))
-	 (chance-per-check-1 (/ chance-per-minute-1 checks-per-minute))
-	 (chance-per-check-2 (/ chance-per-minute-2 checks-per-minute))
-	 (new-note (get-new-note :pad
-				 time
-				 :freqs (mapcar #'note-freq active-pad-notes))))
-    (case (length active-pad-notes)
-      ((0 1 2)
-       (cons new-note
-	     (generate-new-notes
-	      :pad
-	      time
-	      :active-notes (cons new-note active-pad-notes))))
-      ((3 4 5)
-       (when (<= (random-liminale) chance-per-check-1)
-	 (list new-note)))
-      ((6 7)
-       (when (and (< (get-mod-value (vel-mod :pad) time) 0.2)
-		  (<= (random-liminale) chance-per-check-2))
-	 (list new-note))))))
-
-
 ;; *** get-new-frequency
 (defun pad-priority-comp (x y &optional (optimal-freq 285))
   (< (abs (- optimal-freq x)) (abs (- optimal-freq y))))
@@ -81,5 +40,45 @@
    freqs
    #'(lambda (ls) (prefer-first-options (sort ls #'pad-priority-comp)))))
 
+;; *** get-new-note
+(defmethod get-new-note ((type (eql :pad)) time
+			 &key freqs &allow-other-keys)
+  (make-note :start time
+	     :type type
+	     :duration (get-new-duration type)
+	     :velocity (get-mod-value (vel-mod type) time)
+	     :freq (apply #'get-new-frequency type freqs)))
+
+;; *** generate-new-notes
+;;; Given a list of currently playing pad notes, which notes should additionally
+;;; start to play? Return additional notes as a list.
+(defmethod generate-new-notes ((type (eql :pad)) time
+			       &rest keys
+			       &key active-notes
+			       &allow-other-keys)
+  (let* ((active-pad-notes (remove-if-not #'is-pad active-notes))
+	 (density-mod-val (get-mod-value (density-mod :pad) time t))
+	 (density-mult-from-mod (1+ (* -1 5 density-mod-val)))
+	 (chance-per-minute-1 (* 3 density-mult-from-mod))
+	 (chance-per-minute-2 (* 0.6 density-mult-from-mod))
+	 (checks-per-minute (/ 1 (/ *liminale-grid-mseconds* 1000 60)))
+	 (chance-per-check-1 (/ chance-per-minute-1 checks-per-minute))
+	 (chance-per-check-2 (/ chance-per-minute-2 checks-per-minute))
+	 (new-note (apply #'get-new-note type time
+			  :freqs (mapcar #'note-freq active-pad-notes)
+			  keys)))
+    (case (length active-pad-notes)
+      ((0 1 2)
+       (cons new-note
+	     (apply #'generate-new-notes type time
+		    :active-notes (cons new-note active-pad-notes)
+		    keys)))
+      ((3 4 5)
+       (when (<= (random-liminale) chance-per-check-1)
+	 (list new-note)))
+      ((6 7)
+       (when (and (< (get-mod-value (vel-mod type) time) 0.2)
+		  (<= (random-liminale) chance-per-check-2))
+	 (list new-note))))))
 
 ;; EOF pad.lsp

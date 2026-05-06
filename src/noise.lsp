@@ -6,12 +6,13 @@
   :min-freq 110
   :max-freq 1234
   :min-duration 200000
-  :max-duration 420000
-  )
+  :max-duration 420000)
 
-;; *** generate-new-notes
-;;; Given a list of currently playing noisy notes, which notes should 
-;;; additionally start to play? Return additional notes as a list.
+;; *** get-new-duration
+(defmethod get-new-duration ((type (eql :noise)) &rest durs)
+  (get-new-duration-aux type durs #'first 30))
+
+;; *** get-new-note
 (defmethod get-new-note ((type (eql :noise)) time
 			 &key silent &allow-other-keys)
   (make-note :start time
@@ -20,18 +21,18 @@
 	     :duration (get-new-duration type)
 	     :velocity (if silent 0 (+ 0.5 (* 0.5 (random-liminale))))))
 
+;; *** generate-new-notes
+;;; Get a new note every time no noise note is playing
 (let ((last-played? t))
   (defmethod generate-new-notes ((type (eql :noise)) time
+				 &rest keys
 				 &key active-notes
 				 &allow-other-keys)
     (when (<= time 0) (setf last-played? t))
     (let ((note-list (remove-if-not #'is-noise active-notes)))
       (when (null note-list)
-	(prog1 (list (get-new-note type time :silent last-played?))
+	(prog1 (list (apply #'get-new-note type time :silent last-played? keys))
 	  (setf last-played? (not last-played?)))))))
 
-;; *** get-new-duration
-(defmethod get-new-duration ((type (eql :noise)) &rest durs)
-  (get-new-duration-aux type durs 30))
 
 ;; EOF noise.lsp

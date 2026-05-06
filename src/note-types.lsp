@@ -37,6 +37,30 @@
 (defmethod get-last-freqs (type) '())
 (defmethod add-last-freq (type freq) '())
 
+;; *** debugging
+
+;;; Playing around with dynmically scoped variables to capture values from
+;;; deep down the stack:
+(defmacro with-debug-proxy (&body body)
+  `(if (boundp '*liminale-debug-proxy*)
+       ,@body
+       (let (*liminale-debug-proxy*)
+	 (declare (special *liminale-debug-proxy*))
+	 ,@body)))
+
+(defun liminale-log (info)
+  (declare (special *liminale-debug-proxy*))
+  (let ((proxy (boundp '*liminale-debug-proxy*)))
+    (when proxy
+      (push info *liminale-debug-proxy*))))
+
+(defmacro liminale-dump-log (place)
+  `(let ((proxy (boundp '*liminale-debug-proxy*)))
+     (declare (special *liminale-debug-proxy*))
+     (when proxy
+       (setf ,place *liminale-debug-proxy*))))
+
+
 ;; *** generation
 
 (defmethod reset-note-type (type &key &allow-other-keys))
@@ -44,8 +68,9 @@
 (defmethod reset-note-type :before (type &key verbose &allow-other-keys)
   (when verbose (format t "~&Resetting ~a" type)))
 
-(defmethod generate-new-notes (type time &key &allow-other-keys)
-  (list (get-new-note type time)))
+(defmethod generate-new-notes (type time &rest keys &key &allow-other-keys)
+  (list (apply #'get-new-note type time keys)))
+
 ;;; this :around method acts as a check for the result of all generate-new-notes
 (defmethod generate-new-notes :around (type time &key verbose &allow-other-keys)
   (when verbose (format t "~&Generating new ~a notes..." type))
@@ -55,6 +80,14 @@
 
 (defmethod get-new-note (type time &key &allow-other-keys)
   (make-note :start time :type type))
+
+(defmethod get-new-note :around (type time &key debug &allow-other-keys)
+  (if debug
+      (with-debug-proxy
+	(let ((new-note (call-next-method)))
+	  (liminale-dump-log (note-debug new-note))
+	  new-note))
+      (call-next-method)))
 
 (defmethod get-new-duration (type &rest durs)
   (get-new-duration-aux type durs))

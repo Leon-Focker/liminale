@@ -7,6 +7,7 @@
   :max-freq 1234
   :min-duration 10000
   :max-duration 65000
+  :min-no-repetitions 5
   :freq-ratios (append
 		;; start with ratios > 1
 		'(2 3 4 5 6 7 8 9 10)

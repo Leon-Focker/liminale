@@ -10,7 +10,6 @@
   :min-duration 400
   :max-duration 2000
   :min-no-repetitions 0
-  :remember-n-last-notes 20
   :init-dur 500
   :freq-ratios '(1 2 3 4 6 8)
   :nr-of-reps 0
@@ -18,15 +17,17 @@
 
 (define-note-type :contemplative-pause
   :min-duration 5000
-  :max-duration 25000
-  )
+  :max-duration 25000)
 
 ;; *** get-new-duration
 (defmethod get-new-duration ((type (eql :contemplative)) &rest durs)
-  (if (last-was-pause type)
+  (liminale-log (list 'last-durs (get-last-durs type)))
+  (if (= 0 (nr-of-reps type))
       (get-new-duration-aux type durs)
       (let ((last-dur (car (get-last-durs type))))
-	(progn (add-last-dur type last-dur) last-dur))))
+	(liminale-log (list 'old-dur last-dur))
+	(add-last-dur type last-dur)
+	last-dur)))
 
 ;; *** get-new-frequency
 (defmethod get-new-frequency ((type (eql :contemplative)) &rest freqs)
@@ -46,15 +47,13 @@
 
 ;; *** get-new-note
 (defmethod get-new-note ((type (eql :contemplative)) time
-			   &key freqs &allow-other-keys)
-    (make-note :start time
-	       :duration (get-new-duration type)
-	       :type type
-	       ;; between 0.0 and 0.75
-	       :velocity (* (get-mod-value (density-mod :pad) time t) 0.75)
-	       :freq (apply #'get-new-frequency type freqs)))
-
-
+			 &key freqs &allow-other-keys)
+  (make-note :start time
+	     :duration (get-new-duration type)
+	     :type type
+	     ;; between 0.0 and 0.75
+	     :velocity (* (get-mod-value (density-mod :pad) time t) 0.75)
+	     :freq (apply #'get-new-frequency type freqs)))
 
 (defmethod get-new-note ((type (eql :contemplative-pause)) time
 			   &key &allow-other-keys)

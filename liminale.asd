@@ -12,9 +12,9 @@
 	       (:file "note-types")
 	       (:file "modulators")
 	       (:file "notes")
+	       (:file "piano")
 	       (:file "pad")
 	       (:file "contemplative")
-	       (:file "noise")
-	       (:file "piano")))
+	       (:file "noise")))
 
 ;; EOF liminale.asd

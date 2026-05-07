@@ -97,6 +97,7 @@
 	similar-options
 	last-durs
 	#'(lambda (x y) (similarp x y similar-dur-percent))))
+      (liminale-log (list 'unique-dur-options similar-options))
       ;; pick one
       (setf result (funcall picking-fn similar-options)))
     ;; when no ratios are supplied or no matches are found, find a random dur
@@ -155,6 +156,7 @@
       similar-options
       last-freqs
       #'(lambda (x y) (similarp x y similar-freq-percent))))
+    (liminale-log (list 'unique-freq-options similar-options))
     ;; pick one
     (setf result (funcall picking-fn similar-options))
     (add-last-freq type result)

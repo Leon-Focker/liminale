@@ -11,7 +11,7 @@
   :max-duration 2000
   :min-no-repetitions 0
   :init-dur 500
-  :freq-ratios '(1 2 3 4 6 8)
+  :freq-ratios '(1/2 1 3/2 2 3 4 6 8)
   :nr-of-reps 0
   :last-was-pause nil)
 
@@ -34,6 +34,7 @@
   ;; Sorting them by #'> means that higher freqs are more important in
   ;; #'filter-similar-options
   (setf freqs (sort freqs #'>))
+  (liminale-log (list 'last-freq (car (get-last-freqs type))))
   ;; include some remembered freqs at the end, because they might still echo
   ;; (append freqs (first-n (get-last-freqs type) 2))
   ;; call to aux method
@@ -42,7 +43,7 @@
    freqs
    #'(lambda (ls) (or (find (car (get-last-freqs type))
 		       ls
-		       :test #'(lambda (x y) (<= x y)))
+		       :test #'(lambda (x y) (< x y)))
 		      (first ls)))))
 
 ;; *** get-new-note

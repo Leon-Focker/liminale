@@ -2,6 +2,8 @@
 
 (in-package :liminale)
 
+(setf *liminale-grid-mseconds* 100)
+
 (define-note-type :pad
   :min-freq 55
   :max-freq 1234

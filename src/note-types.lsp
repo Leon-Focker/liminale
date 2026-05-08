@@ -52,7 +52,7 @@
   (declare (special *liminale-debug-proxy*))
   (let ((proxy (boundp '*liminale-debug-proxy*)))
     (when proxy
-      (push info *liminale-debug-proxy*))))
+      (push (copy-tree info) *liminale-debug-proxy*))))
 
 (defmacro liminale-dump-log (place)
   `(let ((proxy (boundp '*liminale-debug-proxy*)))

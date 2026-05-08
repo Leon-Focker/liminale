@@ -4,7 +4,7 @@
 
 (defstruct (note
             (:constructor make-note
-                (&key start duration freq velocity type delay-time
+                (&key start duration freq velocity type
                  &aux (time-left duration))))
   (start 0 :type integer)		; in miliseconds
   (duration 0 :type integer)		; in miliseconds

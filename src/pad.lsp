@@ -73,22 +73,24 @@
 	 (chance-per-minute-2 (* 0.6 density-mult-from-mod))
 	 (checks-per-minute (/ 1 (/ *liminale-grid-mseconds* 1000 60)))
 	 (chance-per-check-1 (/ chance-per-minute-1 checks-per-minute))
-	 (chance-per-check-2 (/ chance-per-minute-2 checks-per-minute))
-	 (new-note (apply #'get-new-note type time
-			  :freqs (mapcar #'note-freq active-pad-notes)
-			  keys)))
-    (case (length active-pad-notes)
-      ((0 1 2)
-       (cons new-note
-	     (apply #'generate-new-notes type time
-		    :active-notes (cons new-note active-pad-notes)
+	 (chance-per-check-2 (/ chance-per-minute-2 checks-per-minute)))
+    (flet ((new-note ()
+	     (apply #'get-new-note type time
+		    :freqs (mapcar #'note-freq active-pad-notes)
 		    keys)))
-      ((3 4 5)
-       (when (<= (random-liminale) chance-per-check-1)
-	 (list new-note)))
-      ((6 7)
-       (when (and (< (get-mod-value (vel-mod type) time) 0.2)
-		  (<= (random-liminale) chance-per-check-2))
-	 (list new-note))))))
+      (case (length active-pad-notes)
+	((0 1 2)
+	 (let ((new (new-note)))
+	   (cons new
+		 (apply #'generate-new-notes type time
+			:active-notes (cons new active-pad-notes)
+			keys))))
+	((3 4 5)
+	 (when (<= (random-liminale) chance-per-check-1)
+	   (list (new-note))))
+	((6 7)
+	 (when (and (< (get-mod-value (vel-mod type) time) 0.2)
+		    (<= (random-liminale) chance-per-check-2))
+	   (list (new-note))))))))
 
 ;; EOF pad.lsp

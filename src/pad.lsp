@@ -34,6 +34,11 @@
 (defun pad-priority-comp (x y &optional (optimal-freq 285))
   (< (abs (- optimal-freq x)) (abs (- optimal-freq y))))
 
+(defun remove-close-freqs-to-last (freqs)
+  (loop for freq in freqs
+	when (not (similar-freqp freq (car (get-last-freqs :pad)) 25))
+	  collect freq))
+
 (defmethod get-new-frequency ((type (eql :pad)) &rest freqs)
   ;; Sorting them by #'< means that lower freqs are more important in
   ;; #'filter-similar-options
@@ -41,7 +46,9 @@
   (get-new-frequency-aux
    type
    freqs
-   #'(lambda (ls) (prefer-first-options (sort ls #'pad-priority-comp)))))
+   #'(lambda (ls) (prefer-first-options
+		   (sort (or (remove-close-freqs-to-last ls) ls)
+			 #'pad-priority-comp)))))
 
 ;; *** get-new-note
 (defmethod get-new-note ((type (eql :pad)) time

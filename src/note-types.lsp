@@ -1,4 +1,20 @@
 ;; * note-types
+;;;
+;;; This is an attempt of translating the idea of an interface/trait to Lisp.
+;;; I wanted to be able to define 'note-types' that are guaranteed to implement
+;;; the methods defined by the trait and are able to costumize them. While this
+;;; could have been done with CLOS (or structs even) and inheriting generic
+;;; methods of a super-class, I wanted to do it a fun way! Here I'm still
+;;; utilizing dynamic dispatch from defmethod to implement generic methods and
+;;; the ability to 'overload' them. But the specific methods get bound to
+;;; keywords instead of objects. Data is then bound via closures, than can be
+;;; accessed with (custom and automatically generated) methods.
+;;;
+;;; That means that you can use any keyword as a 'note-type' and have it use
+;;; the generic values and methods for generating notes, unless you define a
+;;; new 'note-type' with that keyword and customize it. Look at the
+;;; #'define-note-type macro and src/piano.lsp, src/pad.lsp, ... etc for
+;;; inspiration.
 
 (in-package :liminale)
 
@@ -41,6 +57,9 @@
 
 ;;; Playing around with dynmically scoped variables to capture values from
 ;;; deep down the stack:
+;;; Put #'liminale-log anywhere in your code, #'liminale-dump-log anywhere
+;;; else (should be called after log to make sense). They only work when they
+;;; are somehow called from within a #'with-debug-proxy block.
 (defmacro with-debug-proxy (&body body)
   `(if (boundp '*liminale-debug-proxy*)
        ,@body
@@ -81,6 +100,10 @@
 (defmethod get-new-note (type time &key &allow-other-keys)
   (make-note :start time :type type))
 
+;;; when called wth debug = t, push any information that was logged from
+;;; functions that are called here (get-new-frequency etc.) into the created
+;;; note. This way we bind debug information specifically to the notes it
+;;; belongs to.
 (defmethod get-new-note :around (type time &key debug &allow-other-keys)
   (if debug
       (with-debug-proxy
@@ -97,7 +120,37 @@
 
 
 ;; ** def-note-type
-;;; (define-note-type :test :min-freq 5)
+;;; This defines a new note-type, aka a keyword with data and methods bound to
+;;; it. Additional to the keyword-arguments listed in the signature below, you
+;;; can use any keyword as a keyword-argument and bind a value to it. This value
+;;; can then be accessed and setf'ed via (keyword type-name). Keywords listed in
+;;; the function signature have a generic value that cannot be changed after
+;;; definition of the note-type.
+;;; EXAMPLE:
+#|
+(define-note-type :crazy-chords
+  :min-freq 10
+  :crazy-numbers '(528 813 666))
+
+(min-freq :crazy-chords)
+=> 10
+
+(max-freq :crazy-chords)
+=> 2000
+
+(pop (crazy-numbers :crazy-chords))
+=> 528
+
+(get-new-note :crazy-chords 0)
+=> #S(NOTE
+      :START 0
+      :DURATION 0
+      :FREQ 440
+      :VELOCITY 0.7
+      :TIME-LEFT 0
+      :TYPE :CRAZY-CHORDS
+      :DEBUG NIL)
+|#
 (defmacro define-note-type (type-name
 			    &rest kws
 			    &key

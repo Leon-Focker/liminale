@@ -4,6 +4,7 @@
 
 (defstruct (modulator)
   (fn #'(lambda (time) (abs (sin time))))	         	; fn(x) -> y
+  (period-ms 1000 :type integer)
   (min 0.0)
   (max 1.0))
 
@@ -14,6 +15,17 @@
     (if normalize
 	(rescale result (modulator-min modulator) (modulator-max modulator) 0 1)
 	result)))
+
+;; *** visualize-modulator
+;;;
+(defun visualize-modulator (modulator)
+  (visualize
+   (loop for time from 0 to (modulator-period-ms modulator)
+	   by (/ (modulator-period-ms modulator) 63)
+	 collect (get-mod-value modulator time)))
+  (format t "~&Mod. Period: ~a Seconds" (/ (modulator-period-ms modulator) 1000))
+  (format t "~&Mod. Min: ~a" (modulator-min modulator))
+  (format t "~&Mod. Max: ~a" (modulator-max modulator)))
 
 ;; ** some modulators
 
@@ -47,7 +59,8 @@
 			  (/ (1+ (sin (+ (/ (* 2 pi time-in-seconds)
 					    period-in-seconds)
 					 phase-offset)))
-			     2))))
+			     2))
+		  :period-ms (round (* period-in-seconds 1000))))
 
 ;;; *** get-saw-modulator
 ;;; A simple saw-wave between 0 and 1 with period in seconds.
@@ -76,7 +89,8 @@
 (defun get-saw-modulator (period-in-seconds)
   (make-modulator :fn #'(lambda (time-in-seconds)
 			  (/ (mod time-in-seconds period-in-seconds)
-			     period-in-seconds))))
+			     period-in-seconds))
+		  :period-ms (round (* period-in-seconds 1000))))
 
 ;; *** get-cut-off-sine-modulator
 ;;; Example:
@@ -115,6 +129,7 @@
 			(- 1 from-top))
 		   from-bottom)
 	      y-offset))
+   :period-ms (round (* period-in-seconds 1000))
    :min (+ from-bottom y-offset)
    :max (+ from-top y-offset)))
 

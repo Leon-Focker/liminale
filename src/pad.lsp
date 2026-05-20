@@ -27,7 +27,7 @@
 		;'(2/7 3/8 4/9)
 		)
   :vel-mod (get-sine-modulator 300 (* pi 1/2))
-  :density-mod (get-cut-off-sine-modulator 500 0.2 0.5 -0.2)
+  :density-mod (get-cut-off-sine-modulator 500 0.4 0.3 -0.4)
   )
 
 ;; *** get-new-frequency

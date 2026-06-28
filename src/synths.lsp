@@ -29,10 +29,15 @@
 	  sp))))
 
 ;; Manual override:
-;;; Potentially a bit off: '(BASIC_18 BASIC_11 BASIC_02)
-;;; BASIC_08 is analysed to be an F4 but is Bf4.
+;;; BASIC_08 is analysed to be an F4 but is Bf2.
 (setf (fundamental-frequency (get-with-id 'basic_08 *acc-samples-basic*))
-      '(466.1638))
+      '(116.54095))
+;;; These might be a bit off, let's just remove them
+(setf (data *acc-samples-double*)
+      (remove-if (lambda (snd) (eq (id snd) 'double_02)) (data *acc-samples-double*)))
+(setf (data *acc-samples-basic*)
+      (remove-if (lambda (snd) (find (id snd) '(BASIC_12 BASIC_02))) ; maybe BASIC_14
+		 (data *acc-samples-basic*)))
 
 ;; ** dreamy-pad
 
@@ -55,6 +60,7 @@
 	 (mid-fade-in-dur 3)
 	 (fade-in-percent (max 10 (* (/ mid-fade-in-dur duration) 100)))
 	 (amp-env `(0 0  ,fade-in-percent 1  92 1  100 0)))
+    (liminale-log (list (id sound) sound-freq))
     (loop for mult in '(1 2 3)
 	  for srt = (/ (* freq mult) sound-freq)
 	  ;; for srtb = (/ (+ (* freq mult) freq-offset-b) sound-freq)

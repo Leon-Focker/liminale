@@ -62,7 +62,7 @@
 ;;; are somehow called from within a #'with-debug-proxy block.
 (defmacro with-debug-proxy (&body body)
   `(if (boundp '*liminale-debug-proxy*)
-       ,@body
+       (progn ,@body)
        (let (*liminale-debug-proxy*)
 	 (declare (special *liminale-debug-proxy*))
 	 ,@body)))

@@ -7,7 +7,7 @@
 (define-note-type :contemplative
   :min-freq 110
   :max-freq 3000
-  :min-duration 400
+  :min-duration 500
   :max-duration 2000
   :min-no-repetitions 0
   :init-dur 500
@@ -78,7 +78,9 @@
 			       &allow-other-keys)
   (let ((contemplative-notes (remove-if-not #'is-contemplative active-notes))
 	(pause-notes (remove-if-not #'is-contemplative-pause active-notes))
-	(pad-notes (remove-if-not #'is-older-pad active-notes)))
+	(pad-notes (remove-if-not #'is-older-pad active-notes))
+	(end-run-threshold
+	  (* (- 1.3 (get-mod-value (density-mod :pad) time t)) 0.1)))
     (unless (append contemplative-notes pause-notes)
       (if (last-was-pause type)
 	  ;; generate :contemplative notes
@@ -91,7 +93,7 @@
 		      keys))
 	    (incf (nr-of-reps type))
 	    ;; determines number of short notes after another
-	    (when (< (random-liminale) (* (nr-of-reps type) 0.08))
+	    (when (< (random-liminale) (* (nr-of-reps type) end-run-threshold))
 	      (setf (last-was-pause type) nil
 		    (nr-of-reps type) 0)))
 	  ;; generate :contemplative-pause notes

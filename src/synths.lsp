@@ -28,6 +28,12 @@
 	  (store-in-text-file sp text-file)
 	  sp))))
 
+;; Manual override:
+;;; Potentially a bit off: '(BASIC_18 BASIC_11 BASIC_02)
+;;; BASIC_08 is analysed to be an F4 but is Bf4.
+(setf (fundamental-frequency (get-with-id 'basic_08 *acc-samples-basic*))
+      '(466.1638))
+
 ;; ** dreamy-pad
 
 (defun dreamy-pad (note &optional (i 0) filter-sweep (freq-offset-b 0))
@@ -45,7 +51,10 @@
 		     (data soundpile)))
 	 (sound (nth-mod i sounds))
 	 (sound-freq (car (fundamental-frequency sound)))
-	 (amp-env '(0 0  10 1  95 1  100 0)))
+	 ;; fade in should be at least 3 seconds
+	 (mid-fade-in-dur 3)
+	 (fade-in-percent (max 10 (* (/ mid-fade-in-dur duration) 100)))
+	 (amp-env `(0 0  ,fade-in-percent 1  92 1  100 0)))
     (loop for mult in '(1 2 3)
 	  for srt = (/ (* freq mult) sound-freq)
 	  ;; for srtb = (/ (+ (* freq mult) freq-offset-b) sound-freq)
@@ -76,7 +85,7 @@
 ;; ** pluck
 (defun pluck (note &optional (i 0))
   (declare (ignore i))
-  (let* ((amp (/ (note-velocity note) 15))
+  (let* ((amp (/ (note-velocity note) 25))
 	 (start (/ (note-start note) 1000.0))
 	 (duration 0.5)
 	 (freq (note-freq note))

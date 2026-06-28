@@ -192,7 +192,8 @@
 	(starts '())
 	(velos '()))
     (loop for note in note-list
-	  do (push (sc::freq-to-midi (note-freq note)) pitches)
+	  for freq = (note-freq note)
+	  do (push (sc::freq-to-midi (if (<= freq 0) 1 freq)) pitches)
 	  do (push (/ (note-duration note) 1000) durs)
 	  do (push (/ (note-start note) 1000) starts)
 	  do (push (note-velocity note) velos))

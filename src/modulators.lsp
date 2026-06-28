@@ -22,7 +22,7 @@
   (visualize
    (loop for time from 0 to (modulator-period-ms modulator)
 	   by (/ (modulator-period-ms modulator) 63)
-	 collect (get-mod-value modulator time)))
+	 collect (get-mod-value modulator time t)))
   (format t "~&Mod. Period: ~a Seconds" (/ (modulator-period-ms modulator) 1000))
   (format t "~&Mod. Min: ~a" (modulator-min modulator))
   (format t "~&Mod. Max: ~a" (modulator-max modulator)))
@@ -131,6 +131,6 @@
 	      y-offset))
    :period-ms (round (* period-in-seconds 1000))
    :min (+ from-bottom y-offset)
-   :max (+ from-top y-offset)))
+   :max (+ (- 1 from-top) y-offset)))
 
 ;; EOF modulators.lsp

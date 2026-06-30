@@ -25,7 +25,7 @@
   (load (compile-file (clm-path "svf.lisp")))
   (load (compile-file (liminale-path "src/moog.ins")))
   (load (compile-file (liminale-path "src/sine.ins")))
-  (load (compile-file (liminale-path "src/simple-echo.ins")))
+  (load (compile-file (liminale-path "src/pluck.ins")))
   (load (compile-file (liminale-path "src/splinter.ins"))))
 
 ;; EOF package.lsp

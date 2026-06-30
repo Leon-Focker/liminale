@@ -1,0 +1,44 @@
+;; * pluck
+
+(in-package :clm)
+
+;; *** fm-pluck
+(definstrument fm-pluck (time freq amp
+				&key (delay 1) (feedback 0.5) (time-after 2)
+				(freq-offset-b 7.81))
+  (unless (> delay 0)
+    (error "simple-echo: delay should be greater than 0 but is ~a" delay))
+  (let* ((st (floor (* time *srate*)))
+	 (dur 0.5)
+	 (nd (+ st (floor (* *srate* dur)) (floor (* time-after *srate*))))
+	 (delay-in-samples (floor (* *srate* delay)))
+	 (oscA (make-oscil :frequency freq :initial-phase 0))
+	 (oscB (make-oscil :frequency (+ freq freq-offset-b) :initial-phase 0))
+	 (FM (make-oscil :frequency (* 2 freq) :initial-phase 0))
+	 (bufferA (make-array delay-in-samples :initial-element 0.0))
+	 (bufferB (make-array delay-in-samples :initial-element 0.0))
+	 (env '(0 0  0.01 1  1 0))
+	 (amp-env (make-env :envelope env :scaler amp :duration dur :base 20)))
+    (Run
+     (loop for i from st to nd do
+       (let* ((amp (env amp-env))
+	      (idx (mod i delay-in-samples))
+	      (synthA 0.0)
+	      (synthB 0.0)
+	      (outA 0.0)
+	      (outB 0.0)
+	      (fm-input (oscil FM)))
+	 ;; Pluck Synthesis
+	 (setf synthA (* amp (+ fm-input (oscil oscA nil (* amp fm-input)))))
+	 (setf synthB (* amp (+ fm-input (oscil oscB nil (* amp fm-input)))))
+	 ;; Delay
+	 (setf outA (+ synthA (aref bufferA idx))
+	       outB (+ synthB (aref bufferB idx))
+	       (aref bufferA idx) (* outA feedback)
+	       (aref bufferB idx) (* outB feedback))
+	 ;; sample output
+	 (outa i outA)
+	 (outb i outB))))))
+
+
+;; EOF pluck.ins

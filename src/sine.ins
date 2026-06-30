@@ -12,9 +12,10 @@
 	 #|(loc (make-locsig))|#)
     (Run
      (loop for i from st to nd do
-       (let ((vala (* amp (oscil osca) (env amp-env)))
-	     (valb (* amp (oscil oscb) (env amp-env))))
+       (let ((vala (* (oscil osca) (env amp-env)))
+	     (valb (* (oscil oscb) (env amp-env))))
 	 (outa i vala)
 	 (outb i valb))))))
+
 
 ;; EOF sine.ins

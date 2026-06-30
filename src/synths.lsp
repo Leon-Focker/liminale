@@ -89,41 +89,14 @@
 		  :freq-offset-b freq-offset-b))))
 
 ;; ** pluck
-(defun pluck (note &optional (i 0))
-  (declare (ignore i))
-  (let* ((amp (/ (note-velocity note) 25))
-	 (start (/ (note-start note) 1000.0))
-	 (duration 0.5)
-	 (freq (note-freq note))
-	 (sound (first (data *acc-samples-basic*)))
-	 (sound-freq (car (fundamental-frequency sound)))
-	 (base-srt (/ freq sound-freq))
-	 (amp-env '(0 1  100 0)))
-    (when (> amp 0)
-      (clm::sound-let
-       ((moog-sound (:statistics nil)
-		    (loop for mult in '(1 2 3)
-			  append
-			  (append
-			   (clm::moog
-			    (path sound)
-			    0
-			    :start 1
-			    :amp-env-expt 4
-			    :amp amp
-			    :amp-env amp-env
-			    :moog t
-			    :srt (* base-srt mult)
-			    :duration duration
-			    :res-env '(0 0.5  1 0.5)
-			    :freq-env `(0 0  1 ,(* freq 3)  1000 0)
-			    :freq-env-expt 8)
-			   (clm::sine 0 duration (* mult freq) amp :amp-env amp-env)))))
-       (clm::simple-echo moog-sound start
-			 :delay (scale-until-in-range
-				 (/ (note-duration note) 1000) 0.2 0.45 3)
-			 :feedback 0.7
-			 :time-after 5)))))
+(defun pluck (note)
+  (clm::fm-pluck
+   (/ (note-start note) 1000.0)
+   (note-freq note)
+   0.1
+   :delay (scale-until-in-range (/ (note-duration note) 1000) 0.2 0.45 3)
+   :time-after 5))
+
 
 ;; ** splinter
 ;;; granular rain and pink noise

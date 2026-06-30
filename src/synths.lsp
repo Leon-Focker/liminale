@@ -44,7 +44,7 @@
 (defun dreamy-pad (note &optional (i 0) filter-sweep (freq-offset-b 0))
   (let* ((start (/ (note-start note) 1000.0))
 	 (duration (/ (note-duration note) 1000.0))
-	 (freq (note-freq note))
+	 (freq (/ (note-freq note) 2))
 	 ;; these coefficients are chosen to get frequency - multiplier pairs
 	 ;; along the lines of (55, ~19)  (500, ~8)  (1234, ~1)
 	 (filter-mult (+ 21 (* -0.032 freq) (* 0.0000128 freq freq)))
@@ -57,9 +57,11 @@
 	 (sound (nth-mod i sounds))
 	 (sound-freq (car (fundamental-frequency sound)))
 	 ;; fade in should be at least 3 seconds
-	 (mid-fade-in-dur 3)
-	 (fade-in-percent (max 10 (* (/ mid-fade-in-dur duration) 100)))
-	 (amp-env `(0 0  ,fade-in-percent 1  92 1  100 0)))
+	 (min-fade-in-dur 3)
+	 (min-fade-out-dur 2)
+	 (fade-in-percent (max 10 (* (/ min-fade-in-dur duration) 100)))
+	 (fade-out-percent (- 100 (max 8 (* (/ min-fade-out-dur duration) 100))))
+	 (amp-env `(0 0  ,fade-in-percent 1  ,fade-out-percent 1  100 0)))
     (liminale-log (list (id sound) sound-freq))
     (loop for mult in '(1 2 3)
 	  for srt = (/ (* freq mult) sound-freq)
@@ -73,20 +75,23 @@
 		  :moog t
 		  :srt srt
 		  ;;:srtb srtb
-		  :duration duration ; should duration be shortened by later start?
+		  ;; later starts should shorten duration, instead increase it
+		  ;; even to avoid long gaps.
+		  :duration (1+ duration)
 		  :ping-pong t
 		  :res-env (if filter-sweep '(0 0.5  1 0.5) '(0 0  1 0))
 		  :freq-env (if filter-sweep
 				`(0 0  0.7 4000  1 ,freq)
-				`(0 ,(* freq filter-mult)  0.7 ,(* freq filter-mult)  1 ,freq))
+				`(0 ,(* freq filter-mult)  0.9  ,(* freq filter-mult) 1 ,freq))
 		  :freq-env-expt 8)
-	  append (clm::sine
-		  start
-		  duration
-		  (* freq mult)
-		  (/ amp 2)
-		  :amp-env amp-env
-		  :freq-offset-b freq-offset-b))))
+	 append (clm::sine
+		 start
+		 duration
+		 (* freq mult)
+		 (/ amp 50)
+		 :freq-offset-b freq-offset-b
+		 :amp-env amp-env))))
+
 
 ;; ** pluck
 (defun pluck (note)

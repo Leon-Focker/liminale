@@ -56,6 +56,11 @@
 		     (data soundpile)))
 	 (sound (nth-mod i sounds))
 	 (sound-freq (car (fundamental-frequency sound)))
+	 (nr-of-harmonics
+	   (case (/ (round (* (random-liminale) 10)) 10)
+	     (0 '(1))
+	     ((1/2 1/4) '(1 2))
+	     (t '(1 2 3))))
 	 ;; fade in should be at least 3 seconds
 	 (min-fade-in-dur 3)
 	 (min-fade-out-dur 2)
@@ -63,7 +68,7 @@
 	 (fade-out-percent (- 100 (max 8 (* (/ min-fade-out-dur duration) 100))))
 	 (amp-env `(0 0  ,fade-in-percent 1  ,fade-out-percent 1  100 0)))
     (liminale-log (list (id sound) sound-freq))
-    (loop for mult in '(1 2 3)
+    (loop for mult in nr-of-harmonics
 	  for srt = (/ (* freq mult) sound-freq)
 	  ;; for srtb = (/ (+ (* freq mult) freq-offset-b) sound-freq)
 	  for amp in '(0.1 0.08 0.05)
@@ -82,7 +87,7 @@
 		  :res-env (if filter-sweep '(0 0.5  1 0.5) '(0 0  1 0))
 		  :freq-env (if filter-sweep
 				`(0 0  0.7 4000  1 ,freq)
-				`(0 ,(* freq filter-mult)  0.9  ,(* freq filter-mult) 1 ,freq))
+				`(0 ,(* freq filter-mult)  0.9  ,(* freq filter-mult) 1 ,(/ freq 2)))
 		  :freq-env-expt 8)
 	 append (clm::sine
 		 start
@@ -95,12 +100,13 @@
 
 ;; ** pluck
 (defun pluck (note)
-  (clm::fm-pluck
-   (/ (note-start note) 1000.0)
-   (note-freq note)
-   0.1
-   :delay (scale-until-in-range (/ (note-duration note) 1000) 0.2 0.45 3)
-   :time-after 5))
+  (when (> (note-velocity note) 0)
+    (clm::fm-pluck
+     (/ (note-start note) 1000.0)
+     (note-freq note)
+     (/ (note-velocity note) 10)
+     :delay (scale-until-in-range (/ (note-duration note) 1000) 0.2 0.45 3)
+     :time-after 5)))
 
 
 ;; ** splinter

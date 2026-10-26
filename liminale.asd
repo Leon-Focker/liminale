@@ -4,7 +4,7 @@
   :description "Algorithmic, generative music for meditation and background listening."
   :author "Leon Focker"
   :license "GNU General Public License v3.0"
-  :depends-on (:layers-utils)
+  :depends-on (:layers-utils/light)
   :serial t
   :pathname "src/"
   :components ((:file "package")

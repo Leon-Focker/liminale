@@ -143,6 +143,7 @@
 
 ;; ** CLM
 
+#+clm
 (when (find-package :clm)
   (defmacro wsound (name out-channels &body body)
     `(clm:with-sound (:header-type clm::mus-riff :srate 48000

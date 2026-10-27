@@ -29,40 +29,39 @@
 ;;; - reset-liminale: bool, whether to reset the random-number generator at the start.
 ;;; - verbose: when t, print a lot of stuff.
 (defun generate-notes (duration note-types
-		       &rest keys
-		       &key (reset-liminale t) verbose &allow-other-keys)
+                       &rest keys
+                       &key (reset-liminale t) verbose &allow-other-keys)
   (when reset-liminale
     (reset-random-liminale)
     (loop for type in note-types do (reset-note-type type)))
-  (setf duration (round (* 1000 duration)))
-  (let ((time 0)
-	(note-list '())
-	(active-notes '())) ; a list of notes that are playing at 'time
-    (loop while (<= time duration) do
-      (when verbose
-	(format t "~&Generating Notes at ~ams." time))
-      ;; update list of active-notes
-      (setf active-notes
-	    (loop for note in active-notes
-		  do (decf (note-time-left note) *liminale-grid-mseconds*)
-		  when (> (note-time-left note) 0)
-		    collect note))
-      ;; Call generation-methods for each note-type
-      ;; and push new notes to note-list and active-notes.
-      (loop for note-type in note-types
-	    do (mapcar #'(lambda (note)
-			   (push note active-notes)
-			   (push note note-list))
-		       (apply #'generate-new-notes
-			      note-type
-			      time
-			      :active-notes active-notes
-			      :note-list note-list
-			      :verbose verbose
-			      keys)))
-      ;; step forward in time 
-      (incf time *liminale-grid-mseconds*))
-    note-list))
+  (let ((duration (round (* 1000 duration))))
+    (nth-value 0 (apply #'run-generation-loop 0 duration note-types keys))))
+
+(defun run-generation-loop (start-ms end-ms note-types
+			    &rest keys
+                            &key note-list active-notes verbose &allow-other-keys)
+  (loop for time from start-ms below end-ms by *liminale-grid-mseconds* do
+    (when verbose
+      (format t "~&Generating Notes at ~ams." time))
+    ;; update list of active-notes
+    (setf active-notes
+          (loop for note in active-notes
+                do (decf (note-time-left note) *liminale-grid-mseconds*)
+                when (> (note-time-left note) 0)
+                  collect note))
+    ;; Call generation-methods for each note-type
+    ;; and push new notes to note-list and active-notes.
+    (loop for note-type in note-types
+          do (dolist (note (apply #'generate-new-notes
+                                  note-type
+                                  time
+                                  :active-notes active-notes
+                                  :note-list note-list
+                                  :verbose verbose
+                                  keys))
+               (push note active-notes)
+               (push note note-list)))
+    finally (return (values note-list active-notes time))))
 
 ;; *** get-new-duration-aux
 ;;; Aux-function for getting a random but original duration between min-dur

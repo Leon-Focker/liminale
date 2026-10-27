@@ -12,6 +12,7 @@
 	       (:file "note-types")
 	       (:file "modulators")
 	       (:file "notes")
+	       (:file "real-time")
 	       (:file "piano")
 	       (:file "pad")
 	       (:file "contemplative")

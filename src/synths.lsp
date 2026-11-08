@@ -1,5 +1,7 @@
 ;; * synths
 
+(require :layers-utils)
+
 (in-package :liminale)
 
 ;; ** Sounds
@@ -27,6 +29,12 @@
 		   'accordion (liminale-path "samples/basic/") :analyse t)))
 	  (store-in-text-file sp text-file)
 	  sp))))
+
+;; (loop for file in (data *acc-samples-double*)
+;;       for freq = 440
+;;       for file-freq = (car (fundamental-frequency file))
+;;       do (wsound (id file) 2
+;; 	   (clm::simple-src (path file) 0 (/ freq file-freq))))
 
 ;; Manual override:
 ;;; BASIC_08 is analysed to be an F4 but is Bf2.
@@ -64,8 +72,8 @@
 	 ;; fade in should be at least 3 seconds
 	 (min-fade-in-dur 3)
 	 (min-fade-out-dur 2)
-	 (fade-in-percent (max 10 (* (/ min-fade-in-dur duration) 100)))
-	 (fade-out-percent (- 100 (max 8 (* (/ min-fade-out-dur duration) 100))))
+	 (fade-in-percent (min (max 10 (* (/ min-fade-in-dur duration) 100)) 50))
+	 (fade-out-percent (max (- 100 (max 8 (* (/ min-fade-out-dur duration) 100))) 51))
 	 (amp-env `(0 0  ,fade-in-percent 1  ,fade-out-percent 1  100 0)))
     (liminale-log (list (id sound) sound-freq))
     (loop for mult in nr-of-harmonics
@@ -89,13 +97,13 @@
 				`(0 0  0.7 4000  1 ,freq)
 				`(0 ,(* freq filter-mult)  0.9  ,(* freq filter-mult) 1 ,(/ freq 2)))
 		  :freq-env-expt 8)
-	 append (clm::sine
-		 start
-		 duration
-		 (* freq mult)
-		 (/ amp 50)
-		 :freq-offset-b freq-offset-b
-		 :amp-env amp-env))))
+	  append (clm::sine
+		  start
+		  duration
+		  (* freq mult)
+		  (/ amp 50)
+		  :freq-offset-b freq-offset-b
+		  :amp-env amp-env))))
 
 
 ;; ** pluck

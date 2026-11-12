@@ -23,18 +23,18 @@
 ;;; Generate a sequence of notes for at least the given duration. Notes are
 ;;; generated according to their note-type. This uses *liminale-grid-mseconds*
 ;;; as isochronal grid-size.
-;;; - duration: Duration in seconds.
+;;; - duration-secs: Duration in seconds.
 ;;; - note-types: A list of note-types (which can be defined with #'define-note-type)
 ;;;   Unknown types will just use the generic methods for generation.
 ;;; - reset-liminale: bool, whether to reset the random-number generator at the start.
 ;;; - verbose: when t, print a lot of stuff.
-(defun generate-notes (duration note-types
+(defun generate-notes (duration-secs note-types
                        &rest keys
                        &key (reset-liminale t) verbose &allow-other-keys)
   (when reset-liminale
     (reset-random-liminale)
     (loop for type in note-types do (reset-note-type type)))
-  (let ((duration (round (* 1000 duration))))
+  (let ((duration (round (* 1000 duration-secs))))
     (nth-value 0 (apply #'run-generation-loop 0 duration note-types keys))))
 
 (defun run-generation-loop (start-ms end-ms note-types
@@ -144,7 +144,7 @@
 		    when (<= (min-freq type) new-freq (max-freq type))
 		      collect new-freq)
 	  when derivatives do (push derivatives options))
-    ;; filter options
+    ;; filter for options that fit most ratios
     (setf similar-options (filter-similar-options options similar-freq-percent))
     ;; debugging
     (liminale-log (list 'similar-freq-options similar-options))
@@ -186,20 +186,23 @@
 ;; *** notes-to-midi
 (defun notes-to-midi (note-list file &optional (tempo 60))
   (test-note-list note-list "notes-to-midi")
-  (let ((pitches '())
-	(durs '())
-	(starts '())
-	(velos '()))
-    (loop for note in note-list
-	  for freq = (note-freq note)
-	  do (push (freq-to-midi (if (<= freq 0) 1 freq)) pitches)
-	  do (push (/ (note-duration note) 1000) durs)
-	  do (push (/ (note-start note) 1000) starts)
-	  do (push (note-velocity note) velos))
-    (lists-to-midi pitches durs starts
-		   :velocity-list velos
-		   :file file
-		   :tempo tempo)))
+  (if (find-package :layers-utils)
+      (let ((pitches '())
+	    (durs '())
+	    (starts '())
+	    (velos '()))
+	(loop for note in note-list
+	      for freq = (note-freq note)
+	      do (push (freq-to-midi (if (<= freq 0) 1 freq)) pitches)
+	      do (push (/ (note-duration note) 1000) durs)
+	      do (push (/ (note-start note) 1000) starts)
+	      do (push (note-velocity note) velos))
+	(funcall (find-symbol "LISTS-TO-MIDI" :layers-utils)
+		 pitches durs starts
+		 :velocity-list velos
+		 :file file
+		 :tempo tempo))
+      (error "notes-to-midi: package layers-utils not found!")))
 
 
 ;; EOF notes.lsp

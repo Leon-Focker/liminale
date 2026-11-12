@@ -1,20 +1,20 @@
 ;; * package
 
 (defpackage :liminale
-  (:use :common-lisp :layers-utils)
+  (:use :common-lisp :layers-utils/light)
   (:nicknames :li))
 
 (in-package :liminale)
 
 ;; get path to local files with #'liminale-path
 #-wasm
-(let ((liminale-src-dir (lyu::get-pathname-dir (asdf:system-source-directory :liminale))))
+(let ((liminale-src-dir (lyul::get-pathname-dir (asdf:system-source-directory :liminale))))
   (defun liminale-path (name)
     (format nil "~a~a" liminale-src-dir name)))
 
 ;; same for #'clm-path
 #+(and clm (not wasm))
-(let ((clm-src-dir (lyu::get-pathname-dir (asdf:system-source-directory :clm))))
+(let ((clm-src-dir (lyul::get-pathname-dir (asdf:system-source-directory :clm))))
   (defun clm-path (name)
     (format nil "~a~a" clm-src-dir name)))
 

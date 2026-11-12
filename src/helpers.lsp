@@ -92,11 +92,10 @@
 ;; *** scale-until-in-range
 ;;; Divide or multiply a value by factor until it is in between min and max
 (defun scale-until-in-range (value min max &optional (factor 2))
-  (if (<= min value max)
-      value
-      (if (> value max)
-	  (scale-until-in-range (/ value factor) min max)
-	  (scale-until-in-range (* value factor) min max))))
+  (cond ((<= value 0) value)
+	((<= min value max) value)
+	((> value max) (scale-until-in-range (/ value factor) min max))
+	(t (scale-until-in-range (* value factor) min max))))
 
 ;; *** prefer-first-options
 (defun prefer-first-options (ls)

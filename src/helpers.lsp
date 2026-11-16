@@ -15,7 +15,7 @@
     (random-liminale))
     
   (defun set-liminale-seed (new-seed)
-    (setf seed new-seed)
+    (setf seed (round new-seed))
     (reset-random-liminale)))
 
 

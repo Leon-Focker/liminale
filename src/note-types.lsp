@@ -52,6 +52,7 @@
 (defmethod add-last-dur (type dur) '())
 (defmethod get-last-freqs (type) '())
 (defmethod add-last-freq (type freq) '())
+(defmethod known-note-type (type))
 
 ;; *** debugging
 
@@ -60,24 +61,24 @@
 ;;; Put #'liminale-log anywhere in your code, #'liminale-dump-log anywhere
 ;;; else (should be called after log to make sense). They only work when they
 ;;; are somehow called from within a #'with-debug-proxy block.
+(defvar *liminale-debug-proxy*)
+
 (defmacro with-debug-proxy (&body body)
   `(if (boundp '*liminale-debug-proxy*)
        (progn ,@body)
        (let (*liminale-debug-proxy*)
-	 (declare (special *liminale-debug-proxy*))
 	 ,@body)))
 
 (defun liminale-log (info)
-  (declare (special *liminale-debug-proxy*))
   (let ((proxy (boundp '*liminale-debug-proxy*)))
     (when proxy
       (push (copy-tree info) *liminale-debug-proxy*))))
 
 (defmacro liminale-dump-log (place)
   `(let ((proxy (boundp '*liminale-debug-proxy*)))
-     (declare (special *liminale-debug-proxy*))
      (when proxy
-       (setf ,place *liminale-debug-proxy*))))
+       (setf ,place *liminale-debug-proxy*
+	     *liminale-debug-proxy* nil))))
 
 
 ;; *** generation
@@ -177,6 +178,8 @@
        ;; this adds the is-type-name predicate for notes
        (defun ,predicate-name (note)
 	 (eq ',type-name (note-type note)))
+       ;; add known-note-type method
+       (defmethod known-note-type ((type (eql ,type-name))) t)
        ;; add getter and setter methods for this type for all supplied keywords.
        ,@(loop for (keyword value) on kws by #'cddr
 	       for getter-name = (intern (format nil "~A" keyword))

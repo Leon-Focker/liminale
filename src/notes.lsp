@@ -12,6 +12,7 @@
   (velocity 0.7 :type number)		; 0-1
   (time-left 0 :type integer)           ; in miliseconds
   (type :pad)                           ; which role this note plays
+  (channel 0 :type integer)
   (debug '()))
 
 
@@ -40,6 +41,9 @@
 (defun run-generation-loop (start-ms end-ms note-types
 			    &rest keys
                             &key note-list active-notes verbose &allow-other-keys)
+  (loop for note-type in note-types
+	unless (known-note-type note-type)
+	  do (warn "run-generation-loop: unknown note-type: ~a" note-type))
   (loop for time from start-ms below end-ms by *liminale-grid-mseconds* do
     (when verbose
       (format t "~&Generating Notes at ~ams." time))
@@ -59,7 +63,7 @@
                                   :note-list note-list
                                   :verbose verbose
                                   keys))
-               (push note active-notes)
+	       (push note active-notes)
                (push note note-list)))
     finally (return (values note-list active-notes time))))
 
@@ -88,7 +92,7 @@
       ;; filter options
       (setf similar-options (filter-similar-options options similar-dur-percent))
       ;; debugging
-      (liminale-log (list 'similar-dur-options similar-options))
+      ;; (liminale-log (list 'similar-dur-options similar-options))
       ;; try and pick the most original frequency
       (setf
        similar-options
@@ -96,7 +100,7 @@
 	similar-options
 	last-durs
 	#'(lambda (x y) (similarp x y similar-dur-percent))))
-      (liminale-log (list 'unique-dur-options similar-options))
+      ;; (liminale-log (list 'unique-dur-options similar-options))
       ;; pick one
       (setf result (funcall picking-fn similar-options)))
     ;; when no ratios are supplied or no matches are found, find a random dur
@@ -147,7 +151,7 @@
     ;; filter for options that fit most ratios
     (setf similar-options (filter-similar-options options similar-freq-percent))
     ;; debugging
-    (liminale-log (list 'similar-freq-options similar-options))
+    ;; (liminale-log (list 'similar-freq-options similar-options))
     ;; try and pick the most original frequency
     (setf
      similar-options
@@ -155,7 +159,7 @@
       similar-options
       last-freqs
       #'(lambda (x y) (similarp x y similar-freq-percent))))
-    (liminale-log (list 'unique-freq-options similar-options))
+    ;; (liminale-log (list 'unique-freq-options similar-options))
     ;; pick one
     (setf result (funcall picking-fn similar-options))
     (add-last-freq type result)
@@ -190,16 +194,19 @@
       (let ((pitches '())
 	    (durs '())
 	    (starts '())
-	    (velos '()))
+	    (velos '())
+	    (channels '()))
 	(loop for note in note-list
 	      for freq = (note-freq note)
 	      do (push (freq-to-midi (if (<= freq 0) 1 freq)) pitches)
 	      do (push (/ (note-duration note) 1000) durs)
 	      do (push (/ (note-start note) 1000) starts)
-	      do (push (note-velocity note) velos))
+	      do (push (note-velocity note) velos)
+	      do (push (note-channel note) channels))
 	(funcall (find-symbol "LISTS-TO-MIDI" :layers-utils)
 		 pitches durs starts
 		 :velocity-list velos
+		 :channel-list channels
 		 :file file
 		 :tempo tempo))
       (error "notes-to-midi: package layers-utils not found!")))

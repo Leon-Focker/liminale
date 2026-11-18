@@ -1,4 +1,4 @@
-;; * guita
+;; * guitar
 
 (in-package :liminale)
 
@@ -9,8 +9,9 @@
 (define-note-type :guitar
   :min-freq 110
   :max-freq 3000
+  :min-duration nil
+  :max-duration nil
   :min-no-repetitions 5
-  :remember-n-last-notes 2
   :init-dur 500
   :freq-ratios (append
 		;; start with ratios > 1
@@ -36,13 +37,13 @@
 (defmethod get-new-duration ((type (eql :guitar)) &rest durs)
   (if (freq-target :guitar)
       ;; something short, maybe even same as last?
-      (setf (min-duration :guitar) 350
-	    (max-duration :guitar) 1500)
+      (setf (min-duration :guitar) 1000 ;350
+	    (max-duration :guitar) 1000) ;1500)
       (let ((chance-for-rest 0.2))
 	(if (< (random-liminale) chance-for-rest)
 	    ;; rest
 	    (setf (min-duration :guitar) 15000
-		  (max-duration :guitar) 84000)
+		  (max-duration :guitar) 20000)  ; 84000)
 	    ;; short
 	    (setf (min-duration :guitar) 500
 		  (max-duration :guitar) 5000))))
@@ -55,7 +56,11 @@
 	   how-many-steps))
   (let ((last (cadr (get-last-freqs :guitar)))
 	(target (freq-target :guitar)))
-    (round (* (expt (/ target last) (/ 1 how-many-steps)) last))))
+    (let ((result (round (* (expt (/ target last) (/ 1 how-many-steps)) last))))
+      (add-last-freq type result)
+      (liminale-log (list 'last last))
+      (liminale-log (list 'targe target))
+      result)))
     
 ;; TODO
 ;; maybe better way to get how-many-steps than random? for example with
@@ -69,6 +74,8 @@
       ;; check whether target would still be harmonic (how?), else pick new...
       ;; try to reach freq-target either in one nr n steps. 
       (let ((steps (1+ (round (* (random-liminale) 2)))))
+	(liminale-log (list 'steps steps))
+	(liminale-log (list 'new (get-step-towards-target type steps)))
 	(prog1 (get-step-towards-target type steps)
 	  (when (= 1 steps) (setf (freq-target type) nil))))
       ;; decide whether to set new freq-target
@@ -96,10 +103,6 @@
 ;; *** generate-new-notes
 ;;; Given a list of currently playing notes, which notes should additionally
 ;;; start to play? Return additional notes as a list.
-(defun is-older-pad (note)
-  (and (is-pad note)
-       (<= 6 (- (note-duration note) (note-time-left note)))))
-
 (defmethod generate-new-notes ((type (eql :guitar))
 			       time
 			       &rest keys
@@ -108,8 +111,10 @@
   (let ((guitar-notes (remove-if-not #'is-guitar active-notes))
 	(pad-notes (remove-if-not #'is-older-pad active-notes)))
     (unless guitar-notes
-      (list (apply #'get-new-note type time
-		   :freqs (mapcar #'note-freq pad-notes)
-		   keys)))))
+      (let ((new-note (apply #'get-new-note type time
+			     :freqs (mapcar #'note-freq pad-notes)
+			     keys)))
+	(liminale-dump-log (note-debug new-note))
+	(list new-note)))))
 
 ;; EOF guitar.lsp

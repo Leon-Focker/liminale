@@ -16,6 +16,7 @@
 	       (:file "piano")
 	       (:file "pad")
 	       (:file "contemplative")
+	       (:file "guitar")
 	       (:file "noise")))
 
 ;; EOF liminale.asd

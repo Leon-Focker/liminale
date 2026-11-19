@@ -11,7 +11,7 @@
 
 ;; *** get-new-duration
 (defmethod get-new-duration ((type (eql :noise)) &rest durs)
-  (get-new-duration-aux type durs #'first 30))
+  (get-new-duration-aux type durs #'first nil 30))
 
 ;; *** get-new-note
 (defmethod get-new-note ((type (eql :noise)) time

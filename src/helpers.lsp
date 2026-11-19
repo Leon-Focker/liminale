@@ -104,7 +104,7 @@
 
 ;; *** filter-similar-options
 ;;; Get a list of lists of options and find options, that appear in as many of
-;;; those lists as possible. The Latter options-lists are prefered, the earlier
+;;; those lists as possible. The later options-lists are prefered, the earlier
 ;;; ones discarded first.
 (defun filter-similar-options (options-lists &optional (similar-within-percent 10))
   (when options-lists

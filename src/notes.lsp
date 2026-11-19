@@ -74,6 +74,7 @@
 			     &optional
 			       durs
 			       (picking-fn #'first)
+			       skip-filter-similar-options
 			       (similar-dur-percent 10))
   (let ((last-durs (first-n (get-last-durs type) (min-no-repetitions type)))
 	(options '())
@@ -90,7 +91,10 @@
 			collect new-dur)
 	    when derivatives do (push derivatives options))
       ;; filter options
-      (setf similar-options (filter-similar-options options similar-dur-percent))
+      (setf similar-options
+	    (if skip-filter-similar-options
+		(apply #'append options)
+		(filter-similar-options options similar-dur-percent)))
       ;; debugging
       ;; (liminale-log (list 'similar-dur-options similar-options))
       ;; try and pick the most original frequency
@@ -130,10 +134,12 @@
 ;;; - freqs: A list of frequencies, for which a match is calculated
 ;;; - picking-fn: a list of options will be generated. This function will be
 ;;;   called to select one of these frequencies.
+;;; - skip-filter-similar-options: boolean.
 (defun get-new-frequency-aux (type
 			      &optional
 				freqs
 				(picking-fn #'first)
+				skip-filter-similar-options
 				(similar-freq-percent (* 100 (1- (expt 2 1/24)))))
   (let ((last-freqs (first-n (get-last-freqs type) (min-no-repetitions type)))
 	(options '())
@@ -149,7 +155,10 @@
 		      collect new-freq)
 	  when derivatives do (push derivatives options))
     ;; filter for options that fit most ratios
-    (setf similar-options (filter-similar-options options similar-freq-percent))
+    (setf similar-options
+	  (if skip-filter-similar-options
+	      (apply #'append options)
+	      (filter-similar-options options similar-freq-percent)))
     ;; debugging
     ;; (liminale-log (list 'similar-freq-options similar-options))
     ;; try and pick the most original frequency

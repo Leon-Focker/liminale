@@ -207,6 +207,10 @@
 		  (max (remember-n-last-notes ,type-name)
 		       (min-no-repetitions ,type-name))
 		  :init-element (init-freq ,type-name)))
+	   ;; reset all other keywords
+	   ,@(loop for (keyword value) on kws by #'cddr
+		   for getter-name = (intern (format nil "~A" keyword))
+		   collect `(setf (,getter-name ,type-name) ,value))
 	   t)
 	 ;; call the reset function to init the closure variables
 	 (reset-note-type ,type-name)))))

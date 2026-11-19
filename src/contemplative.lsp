@@ -9,60 +9,80 @@
   :max-freq 3000
   :min-duration 500
   :max-duration 2000
-  :min-no-repetitions 0
+  :min-no-repetitions 4 ; 0
   :init-dur 500
   :freq-ratios '(1/2 1 3/2 2 3 4 6 8)
   :nr-of-reps 0
-  :last-was-pause nil)
-
-(define-note-type :contemplative-pause
-  :min-duration 5000
-  :max-duration 25000)
+  :last-was-pause nil
+  :nth-harmonic 1)
 
 ;; *** get-new-duration
 (defmethod get-new-duration ((type (eql :contemplative)) &rest durs)
-  (liminale-log (list 'last-durs (get-last-durs type)))
-  (if (= 0 (nr-of-reps type))
-      (get-new-duration-aux type durs)
+  (if (and (last-was-pause type) (> (nr-of-reps type) 0))
       (let ((last-dur (car (get-last-durs type))))
-	(liminale-log (list 'old-dur last-dur))
 	(add-last-dur type last-dur)
-	last-dur)))
+	last-dur)
+      (progn
+	(if (last-was-pause type)
+	    (setf (min-duration type) 500
+		  (max-duration type) 2000)
+	    (setf (min-duration type) 5000
+		  (max-duration type) 25000))
+	(get-new-duration-aux type durs))))
 
 ;; *** get-new-frequency
+;; (let ((fundamental (nth-mod (1- (nth-harmonic type))
+;; 			    (get-last-freqs type))))
+;;   (if (find fundamental ls :test #'similar-freqp)
+;;       (progn (incf (nth-harmonic type))
+;; 	     (scale-until-in-range
+;; 	      (* (nth-harmonic type) fundamental)
+;; 	      (min-freq type)
+;; 	      (max-freq type)))
+;;       (progn (setf (nth-harmonic type) 1)
+;; 	     nil)))
 (defmethod get-new-frequency ((type (eql :contemplative)) &rest freqs)
-  ;; Sorting them by #'> means that higher freqs are more important in
-  ;; #'filter-similar-options
-  (setf freqs (sort freqs #'>))
-  (liminale-log (list 'last-freq (car (get-last-freqs type))))
-  ;; include some remembered freqs at the end, because they might still echo
-  ;; (append freqs (first-n (get-last-freqs type) 2))
-  ;; call to aux method
-  (get-new-frequency-aux
-   type
-   freqs
-   #'(lambda (ls) (or (find (car (get-last-freqs type))
-		       ls
-		       :test #'(lambda (x y) (< x y)))
-		      (first ls)))))
+  (flet ((picking-fn (ls)
+	   ;; add pitches
+	   (let ((fundamental (nth-mod (1- (nth-harmonic type))
+				       (get-last-freqs type))))
+	     (incf (nth-harmonic type))
+	     (when t ;;(find fundamental ls :test #'similar-freqp)
+	       (loop for k from (nth-harmonic type) to 9
+		     do (push (* fundamental k) ls))))
+	   ;; sort
+	   (setf ls (sort (pick-original-options ls (get-last-freqs type) #'similar-freqp)
+			  #'<))
+	   ;; choose
+	   (or (find (car (get-last-freqs type)) ls
+		     :test #'(lambda (x y) (< x y)))
+	       (first ls))))
+    ;; Sorting them by #'> means that higher freqs are more important in
+    ;; #'filter-similar-options
+    (setf freqs (sort freqs #'>))
+    ;; include some remembered freqs at the end, because they might still echo
+    ;; (append freqs (first-n (get-last-freqs type) 2))
+    ;; call to aux method
+    (scale-until-in-range
+     (get-new-frequency-aux type freqs #'picking-fn)
+     (min-freq type)
+     (max-freq type))))
 
 ;; *** get-new-note
 (defmethod get-new-note ((type (eql :contemplative)) time
 			 &key freqs &allow-other-keys)
-  (make-note :start time
-	     :duration (get-new-duration type)
-	     :type type
-	     ;; between 0.0 and 0.75
-	     :velocity (* (get-mod-value (density-mod :pad) time t) 0.75)
-	     :freq (apply #'get-new-frequency type freqs)))
-
-(defmethod get-new-note ((type (eql :contemplative-pause)) time
-			   &key &allow-other-keys)
+  (let ((vel (if (last-was-pause type)
+		 (* (get-mod-value (density-mod :pad) time t) 0.75)
+		 0))
+	(freq (if (last-was-pause type)
+		  (apply #'get-new-frequency type freqs)
+		  0)))
     (make-note :start time
-	       :type type
 	       :duration (get-new-duration type)
-	       :velocity 0.0
-	       :freq 0))
+	       :type type
+	       ;; between 0.0 and 0.75
+	       :velocity vel
+	       :freq freq)))
 
 ;; *** generate-new-notes
 ;;; Given a list of currently playing notes, which notes should additionally
@@ -77,41 +97,23 @@
 			       &key active-notes
 			       &allow-other-keys)
   (let ((contemplative-notes (remove-if-not #'is-contemplative active-notes))
-	(pause-notes (remove-if-not #'is-contemplative-pause active-notes))
-	(pad-notes (remove-if-not #'is-older-pad active-notes))
-	(end-run-threshold
-	  (* (- 1.3 (get-mod-value (density-mod :pad) time t)) 0.1)))
-    (unless (append contemplative-notes pause-notes)
-      (if (last-was-pause type)
-	  ;; generate :contemplative notes
-	  (prog1
-	      (list
-	       (apply #'get-new-note type time
-		      :freqs (mapcar #'note-freq
-				     (append contemplative-notes
-					     pad-notes))
-		      keys))
-	    (incf (nr-of-reps type))
-	    ;; determines number of short notes after another
-	    (when (< (random-liminale) (* (nr-of-reps type) end-run-threshold))
-	      (setf (last-was-pause type) nil
-		    (nr-of-reps type) 0)))
-	  ;; generate :contemplative-pause notes
-	  (apply #'generate-new-notes :contemplative-pause time keys)))))
-  
-(defmethod generate-new-notes ((type (eql :contemplative-pause)) time
-			       &rest keys
-			       &key &allow-other-keys)
-  (setf (last-was-pause :contemplative) t)
-  (list (apply #'get-new-note :contemplative-pause time keys)))
-
-;; *** reset
-;;; becasue :contemplative also calls :contemplative-pause, we need this hook
-;;; to reset the latter:
-(defmethod reset-note-type :after ((type (eql :contemplative))
-				   &key &allow-other-keys)
-(setf (nr-of-reps type) 0)
-(setf (last-was-pause type) nil)
-  (reset-note-type :contemplative-pause))
+	(pad-notes (remove-if-not #'is-older-pad active-notes)))
+    ;; get new note when none is playing
+    (unless contemplative-notes
+      (let ((end-run-threshold
+	      (* (- 1.3 (get-mod-value (density-mod :pad) time t)) 0.1))    
+	    (new-note (apply #'get-new-note type time
+			     :freqs (mapcar #'note-freq pad-notes)	
+			     keys)))
+	;; decide whether next note is a pause or not 
+	(if (last-was-pause type)
+	    (if (< (random-liminale) (* (nr-of-reps type) end-run-threshold))
+		(progn (setf (last-was-pause type) nil
+			     (nr-of-reps type) 0))
+		(incf (nr-of-reps type)))
+	    (progn (setf (last-was-pause type) t)
+		   (setf (nth-harmonic type) 1)))
+	;; return
+	(list new-note)))))
 
 ;; EOF contemplative.lsp

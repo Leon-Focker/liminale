@@ -11,10 +11,9 @@
   :max-duration 2000
   :min-no-repetitions 4 ; 0
   :init-dur 500
-  :freq-ratios '(1/2 1 3/2 2 3 4 6 8)
+  :freq-ratios '(1/8 1/4 1/2 1 2 4 8 1/12 1/6 1/3 2/3 3/2 3 6 12)
   :nr-of-reps 0
-  :last-was-pause nil
-  :nth-harmonic 1)
+  :last-was-pause nil)
 
 ;; *** get-new-duration
 (defmethod get-new-duration ((type (eql :contemplative)) &rest durs)
@@ -31,42 +30,21 @@
 	(get-new-duration-aux type durs))))
 
 ;; *** get-new-frequency
-;; (let ((fundamental (nth-mod (1- (nth-harmonic type))
-;; 			    (get-last-freqs type))))
-;;   (if (find fundamental ls :test #'similar-freqp)
-;;       (progn (incf (nth-harmonic type))
-;; 	     (scale-until-in-range
-;; 	      (* (nth-harmonic type) fundamental)
-;; 	      (min-freq type)
-;; 	      (max-freq type)))
-;;       (progn (setf (nth-harmonic type) 1)
-;; 	     nil)))
 (defmethod get-new-frequency ((type (eql :contemplative)) &rest freqs)
   (flet ((picking-fn (ls)
-	   ;; add pitches
-	   (let ((fundamental (nth-mod (1- (nth-harmonic type))
-				       (get-last-freqs type))))
-	     (incf (nth-harmonic type))
-	     (when t ;;(find fundamental ls :test #'similar-freqp)
-	       (loop for k from (nth-harmonic type) to 9
-		     do (push (* fundamental k) ls))))
-	   ;; sort
-	   (setf ls (sort (pick-original-options ls (get-last-freqs type) #'similar-freqp)
-			  #'<))
-	   ;; choose
-	   (or (find (car (get-last-freqs type)) ls
-		     :test #'(lambda (x y) (< x y)))
-	       (first ls))))
+	   (setf ls (sort ls #'<))
+	   (let* ((ls1 (member (car (get-last-freqs type)) ls
+			       :test #'(lambda (x y) (< x y))))
+		  (len (- (length ls) (length ls1)))
+		  (ls2 (subseq ls 0 len)))
+	     (nth-mod (round (/ (length ls) 4)) (append ls1 ls2)))))
     ;; Sorting them by #'> means that higher freqs are more important in
     ;; #'filter-similar-options
     (setf freqs (sort freqs #'>))
     ;; include some remembered freqs at the end, because they might still echo
     ;; (append freqs (first-n (get-last-freqs type) 2))
     ;; call to aux method
-    (scale-until-in-range
-     (get-new-frequency-aux type freqs #'picking-fn)
-     (min-freq type)
-     (max-freq type))))
+    (get-new-frequency-aux type freqs #'picking-fn t)))
 
 ;; *** get-new-note
 (defmethod get-new-note ((type (eql :contemplative)) time
@@ -111,8 +89,7 @@
 		(progn (setf (last-was-pause type) nil
 			     (nr-of-reps type) 0))
 		(incf (nr-of-reps type)))
-	    (progn (setf (last-was-pause type) t)
-		   (setf (nth-harmonic type) 1)))
+	    (setf (last-was-pause type) t))
 	;; return
 	(list new-note)))))
 

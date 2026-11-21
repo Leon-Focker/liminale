@@ -24,7 +24,21 @@
 	 :active-notes active-notes)
       (setf active-notes active
 	    cursor-ms end-time)
-      notes)))
+      notes))
 
+  (defun set-cursor (time-ms)
+    (reset-rt)
+    (multiple-value-bind (notes active end-time)
+	(run-generation-loop
+	 0
+	 time-ms
+	 types)
+      (setf active-notes active
+	    cursor-ms end-time)
+      (loop for note in active
+	    for copy = (copy-structure note)
+	    do (setf (note-start copy) time-ms
+		     (note-duration copy) (note-time-left copy))
+	    collect copy))))
 
 ;; EOF real-time.lsp

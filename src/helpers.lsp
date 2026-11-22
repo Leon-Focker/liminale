@@ -5,13 +5,13 @@
 ;; ** randomness
 
 (let* ((seed 5)
-       (rn (make-random-number seed)))
+       (rn (make-random-number seed :wihi)))
   
   (defun random-liminale ()
     (get-next rn))
   
   (defun reset-random-liminale ()
-    (setf rn (make-random-number seed))
+    (setf rn (make-random-number seed :wihi))
     (random-liminale))
     
   (defun set-liminale-seed (new-seed)

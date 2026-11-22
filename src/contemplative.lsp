@@ -75,9 +75,12 @@
 			       &key active-notes
 			       &allow-other-keys)
   (let ((contemplative-notes (remove-if-not #'is-contemplative active-notes))
-	(pad-notes (remove-if-not #'is-older-pad active-notes)))
+	(pad-notes (remove-if-not #'is-older-pad active-notes))
+	(guitar-notes (remove-if-not (lambda (x) (and (is-guitar x)
+						      (> (note-velocity x) 0)))
+				     active-notes)))
     ;; get new note when none is playing
-    (unless contemplative-notes
+    (unless (or contemplative-notes guitar-notes)
       (let ((end-run-threshold
 	      (* (- 1.3 (get-mod-value (density-mod :pad) time t)) 0.1))    
 	    (new-note (apply #'get-new-note type time

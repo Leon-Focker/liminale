@@ -43,11 +43,11 @@
       ;; something short, maybe even same as last?
       (setf (min-duration :guitar) 350
 	    (max-duration :guitar) 1500)
-      (let ((chance-for-rest 0.2))
+      (let ((chance-for-rest 0.13))
 	(if (< (random-liminale) chance-for-rest)
 	    ;; rest
 	    (setf (min-duration :guitar) 15000
-		  (max-duration :guitar) 84000)
+		  (max-duration :guitar) 64000)
 	    ;; short
 	    (setf (min-duration :guitar) 500
 		  (max-duration :guitar) 5000))))
@@ -118,8 +118,11 @@
 			       &key active-notes
 			       &allow-other-keys)
   (let ((guitar-notes (remove-if-not #'is-guitar active-notes))
-	(pad-notes (remove-if-not #'is-older-pad active-notes)))
-    (unless guitar-notes
+	(pad-notes (remove-if-not #'is-older-pad active-notes))
+	(cont-notes (remove-if-not (lambda (x) (and (is-contemplative x)
+						    (> (note-velocity x) 0)))
+				   active-notes)))
+    (unless (or guitar-notes cont-notes)
       (let ((new-note (apply #'get-new-note type time
 			     :freqs (mapcar #'note-freq pad-notes)
 			     keys)))

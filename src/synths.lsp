@@ -67,7 +67,7 @@
 	 (nr-of-harmonics
 	   (case (/ (round (* (random-liminale) 10)) 10)
 	     (0 '(1))
-	     ((1/2 1/4) '(1 2))
+	     ((1/2 1/5) '(1 2))
 	     (t '(1 2 3))))
 	 ;; fade in should be at least 3 seconds
 	 (min-fade-in-dur 3)

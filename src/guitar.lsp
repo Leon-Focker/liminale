@@ -16,22 +16,7 @@
   :max-duration nil
   :min-no-repetitions 5
   :init-dur 500
-  :freq-ratios (append
-		;; start with ratios > 1
-		'(2 3 4 5 6 7 8 9 10)
-		'(3/2 4/3 5/4 6/5); 7/6 8/7)
-		'(5/3 6/4) ; maybe 9/7?
-		'(5/2); 7/4 8/5)
-		;'(7/3 9/5)
-		'(7/2 8/3 9/4)
-		;; now < 1
-		'(1/2 1/3 1/4 1/5 1/6 1/7 1/8); 1/9 1/10)
-		'(2/3 3/4 4/5); 5/6)
-		'(3/5)
-		'(2/5 5/8)
-		;'(3/7 5/9)
-		;'(2/7 3/8 4/9)
-		)
+  :freq-ratios *pad-ratios*
   :last-was-pause nil
   ;; this does heavy lifting for this type:
   :freq-target nil

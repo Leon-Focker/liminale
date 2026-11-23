@@ -102,16 +102,17 @@
 			       &rest keys
 			       &key active-notes
 			       &allow-other-keys)
-  (let ((guitar-notes (remove-if-not #'is-guitar active-notes))
-	(pad-notes (remove-if-not #'is-older-pad active-notes))
-	(cont-notes (remove-if-not (lambda (x) (and (is-contemplative x)
-						    (> (note-velocity x) 0)))
-				   active-notes)))
-    (unless (or guitar-notes cont-notes)
-      (let ((new-note (apply #'get-new-note type time
-			     :freqs (mapcar #'note-freq pad-notes)
-			     keys)))
-	;; (liminale-dump-log (note-debug new-note))
-	(list new-note)))))
+  (when (> time 10000)
+    (let ((guitar-notes (remove-if-not #'is-guitar active-notes))
+	  (pad-notes (remove-if-not #'is-older-pad active-notes))
+	  (cont-notes (remove-if-not (lambda (x) (and (is-contemplative x)
+						      (> (note-velocity x) 0)))
+				     active-notes)))
+      (unless (or guitar-notes cont-notes)
+	(let ((new-note (apply #'get-new-note type time
+			       :freqs (mapcar #'note-freq pad-notes)
+			       keys)))
+	  ;; (liminale-dump-log (note-debug new-note))
+	  (list new-note))))))
 
 ;; EOF guitar.lsp

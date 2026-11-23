@@ -31,13 +31,14 @@
 			       &rest keys
 			       &key active-notes
 			       &allow-other-keys)
-  (let* ((gong-notes (remove-if-not #'is-gong active-notes))
-	 (pad-notes (remove-if-not #'is-pad active-notes))
-	 (harmony-stable (every (lambda (x) (> (note-time-left x) 10000))
-			       pad-notes)))
-    (when (and (not gong-notes) harmony-stable)
-      (list (apply #'get-new-note type time
-		   :freqs (mapcar #'note-freq pad-notes)
-		   keys)))))
+  (when (> time 60000)
+    (let* ((gong-notes (remove-if-not #'is-gong active-notes))
+	   (pad-notes (remove-if-not #'is-pad active-notes))
+	   (harmony-stable (every (lambda (x) (> (note-time-left x) 10000))
+				  pad-notes)))
+      (when (and (not gong-notes) harmony-stable)
+	(list (apply #'get-new-note type time
+		     :freqs (mapcar #'note-freq pad-notes)
+		     keys))))))
 
 ;; EOF gong.lsp

@@ -119,18 +119,19 @@
 |#
 (defun get-cut-off-sine-modulator (period-in-seconds
 				   &optional (from-bottom 0.3) (from-top 0)
-				     (y-offset -0.3) (phase-offset (* pi 3/2)))
+				     (y-offset -0.3) (mult 1) (phase-offset (* pi 3/2)))
   (make-modulator
    :fn #'(lambda (time-in-seconds)
-	   (+ (max (min (/ (1+ (sin (+ (/ (* 2 pi time-in-seconds)
-					  period-in-seconds)
-				       phase-offset)))
-			   2)
-			(- 1 from-top))
-		   from-bottom)
-	      y-offset))
+	   (* (+ (max (min (/ (1+ (sin (+ (/ (* 2 pi time-in-seconds)
+					     period-in-seconds)
+					  phase-offset)))
+			      2)
+			   (- 1 from-top))
+		      from-bottom)
+		 y-offset)
+	      mult))
    :period-ms (round (* period-in-seconds 1000))
-   :min (+ from-bottom y-offset)
-   :max (+ (- 1 from-top) y-offset)))
+   :min (* (+ from-bottom y-offset) mult)
+   :max (* (+ (- 1 from-top) y-offset) mult)))
 
 ;; EOF modulators.lsp

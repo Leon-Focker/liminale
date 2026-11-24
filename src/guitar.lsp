@@ -28,7 +28,7 @@
       ;; something short, maybe even same as last?
       (setf (min-duration :guitar) 350
 	    (max-duration :guitar) 1500)
-      (let ((chance-for-rest 0.13))
+      (let ((chance-for-rest 0.2))
 	(if (< (random-liminale) chance-for-rest)
 	    ;; rest
 	    (setf (min-duration :guitar) 15000

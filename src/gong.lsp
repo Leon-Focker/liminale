@@ -5,10 +5,10 @@
 ;; ** type
  
 (define-note-type :gong
-  :min-freq 110
-  :max-freq 800
+  :min-freq 200
+  :max-freq 783
   :min-duration 20000
-  :max-duration 120000
+  :max-duration 90000
   :min-no-repetitions 0
   :remember-n-last-notes 3
   :freq-ratios *pad-ratios*

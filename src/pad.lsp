@@ -24,7 +24,7 @@
 
 (define-note-type :pad
   :min-freq 55
-  :max-freq 783
+  :max-freq 1234
   :min-duration 10000
   :max-duration 65000
   :min-no-repetitions 5

@@ -55,7 +55,8 @@
 	 (freq (/ (note-freq note) 2))
 	 ;; these coefficients are chosen to get frequency - multiplier pairs
 	 ;; along the lines of (55, ~19)  (500, ~8)  (1234, ~1)
-	 (filter-mult (+ 21 (* -0.032 freq) (* 0.0000128 freq freq)))
+	 (filter-mult (+ 19 (* -0.032 freq) (* 0.0000128 freq freq)))
+	 (amp-mult (/ (- 2 (/ (log (/ freq 55))(log (/ 1234 55)))) 2))
 	 (soundpile (if (< (random-liminale) (note-velocity note))
 			*acc-samples-double*
 			*acc-samples-basic*))
@@ -83,7 +84,7 @@
 	  append (clm::moog
 		  (path sound)
 		  (+ start (* (1- mult) 2))
-		  :amp amp
+		  :amp (* amp amp-mult)
 		  :amp-env amp-env
 		  :moog t
 		  :srt srt

@@ -65,10 +65,6 @@
 ;; *** generate-new-notes
 ;;; Given a list of currently playing notes, which notes should additionally
 ;;; start to play? Return additional notes as a list.
-(defun is-older-pad (note)
-  (and (is-pad note)
-       (<= 6 (- (note-duration note) (note-time-left note)))))
-
 (defmethod generate-new-notes ((type (eql :contemplative))
 			       time
 			       &rest keys
@@ -76,11 +72,13 @@
 			       &allow-other-keys)
   (let ((contemplative-notes (remove-if-not #'is-contemplative active-notes))
 	(pad-notes (remove-if-not #'is-older-pad active-notes))
+	(gong-notes (remove-if-not #'is-recent-gong active-notes))
 	(guitar-notes (remove-if-not (lambda (x) (and (is-guitar x)
 						      (> (note-velocity x) 0)))
 				     active-notes)))
     ;; get new note when none is playing
-    (unless (or contemplative-notes guitar-notes)
+    (unless (or contemplative-notes guitar-notes
+		(and gong-notes (> (get-mod-value (vel-mod :gong) time) 0.6)))
       (let ((end-run-threshold
 	      (* (- 1.3 (get-mod-value (density-mod :pad) time t)) 0.1))    
 	    (new-note (apply #'get-new-note type time

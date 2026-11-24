@@ -105,10 +105,12 @@
   (when (> time 10000)
     (let ((guitar-notes (remove-if-not #'is-guitar active-notes))
 	  (pad-notes (remove-if-not #'is-older-pad active-notes))
+	  (gong-notes (remove-if-not #'is-recent-gong active-notes))
 	  (cont-notes (remove-if-not (lambda (x) (and (is-contemplative x)
 						      (> (note-velocity x) 0)))
 				     active-notes)))
-      (unless (or guitar-notes cont-notes)
+      (unless (or guitar-notes cont-notes
+		  (and gong-notes (> (get-mod-value (vel-mod :gong) time) 0.6)))
 	(let ((new-note (apply #'get-new-note type time
 			       :freqs (mapcar #'note-freq pad-notes)
 			       keys)))

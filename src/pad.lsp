@@ -24,7 +24,7 @@
 
 (define-note-type :pad
   :min-freq 55
-  :max-freq 1234
+  :max-freq 783
   :min-duration 10000
   :max-duration 65000
   :min-no-repetitions 5
@@ -32,6 +32,11 @@
   :vel-mod (get-sine-modulator 300 (* pi 1/2))
   :density-mod (get-cut-off-sine-modulator 500 0.4 0.3 -0.4)
   )
+
+;; *** is-older-pad
+(defun is-older-pad (note &optional (min-time 3500))
+  (and (is-pad note)
+       (<= min-time (- (note-duration note) (note-time-left note)))))
 
 ;; *** get-new-frequency
 (defun pad-priority-comp (x y &optional (optimal-freq 285))

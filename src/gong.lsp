@@ -7,12 +7,12 @@
 (define-note-type :gong
   :min-freq 200
   :max-freq 783
-  :min-duration 20000
-  :max-duration 90000
+  :min-duration 10000
+  :max-duration 85000
   :min-no-repetitions 0
   :remember-n-last-notes 3
   :freq-ratios *pad-ratios*
-  :vel-mod (get-cut-off-sine-modulator 400 0 0.3 0 1.42 (* pi 4/3)))
+  :vel-mod (get-cut-off-sine-modulator 400 0 0.3 0 1.42 (* pi 5/3)))
 
 ;; *** is-recent-gong
 (defun is-recent-gong (note &optional (max-time 10000))
